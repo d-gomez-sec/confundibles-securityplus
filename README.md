@@ -1,3 +1,4 @@
+**▶ Pruébala aquí:** https://d-gomez-sec.github.io/confundibles-securityplus/
 # Confundibles — Security+ SY0-701
 
 Entrenador de los pares de conceptos que CompTIA usa para hacerte dudar en el examen SY0-701.
@@ -38,7 +39,7 @@ El resumen final de fallos se muestra en español, porque ahí ya no simulas exa
 
 ## Uso
 
-Abre `confundibles-securityplus.html` en cualquier navegador. Un archivo, sin instalación ni conexión.
+Abre `index.html` en cualquier navegador. Un archivo, sin instalación ni conexión.
 
 ---
 
