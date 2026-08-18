@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1117">
+<title>Confundibles · Security+ SY0-701</title>
+<style>
+  :root{
+    --fondo:#0d1117; --tinta:#c9d1d9; --panel:#161b22; --linea:#2a313c;
+    --verde:#3fb950; --verde-suave:#12261a;
+    --ambar:#d29922; --ambar-suave:#2a2110;
+    --rojo:#f85149; --rojo-suave:#2c1618;
+    --azul:#58a6ff; --violeta:#bc8cff;
+    --tenue:#8b949e;
+    --mono:'Courier New',ui-monospace,monospace;
+    --sans:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:var(--sans);min-height:100vh;padding:1.4rem 1rem 4rem}
+  .contenedor{max-width:820px;margin:0 auto}
+  header{text-align:center;margin-bottom:1.4rem}
+  h1{font-size:1.5rem;color:#e6edf3;letter-spacing:-.01em}
+  h1::before{content:"> ";color:var(--verde);font-family:var(--mono)}
+  header p{color:var(--tenue);font-size:.92rem;margin:.5rem auto 0;line-height:1.5;max-width:580px}
+
+  .panel{background:var(--panel);border:1px solid var(--linea);border-radius:16px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25)}
+  label.tit{display:block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--verde);margin-bottom:.7rem}
+
+  /* Filtros de dominio */
+  .filtros{display:flex;flex-wrap:wrap;gap:.45rem}
+  .chip{font-family:var(--sans);font-size:.78rem;font-weight:600;padding:.4rem .75rem;border-radius:99px;cursor:pointer;background:#0d1117;color:var(--tenue);border:1px solid var(--linea)}
+  .chip.on{background:var(--verde-suave);color:var(--verde);border-color:var(--verde)}
+  .chip:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+
+  .botones{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+  button{font-family:var(--sans);font-weight:600;font-size:.88rem;padding:.6rem 1.2rem;border-radius:10px;cursor:pointer;border:1px solid transparent}
+  .btn-pri{background:var(--verde);color:#0d1117}
+  .btn-pri:hover{background:#4fd162}
+  .btn-sec{background:#21262d;color:var(--tinta);border-color:var(--linea)}
+  .btn-sec:hover{background:#2d333b;border-color:var(--verde)}
+  button:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+  button[disabled]{opacity:.45;cursor:not-allowed}
+
+  /* Marcador */
+  .marcador{display:flex;gap:1.2rem;align-items:center;font-family:var(--mono);font-size:.82rem;color:var(--tenue);flex-wrap:wrap}
+  .marcador b{color:var(--verde);font-size:1rem}
+  .marcador .mal b{color:var(--rojo)}
+  .barra{height:6px;background:#21262d;border-radius:3px;margin-top:.6rem;overflow:hidden}
+  .barra i{display:block;height:100%;background:var(--verde);width:0;transition:width .3s}
+  @media (prefers-reduced-motion:reduce){ .barra i{transition:none} }
+
+  /* Pregunta */
+  #zona{display:none}
+  .dominio-et{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .55rem;border-radius:99px;background:#21262d;color:var(--tenue);border:1px solid var(--linea);margin-bottom:.7rem}
+  .pista{font-size:1.02rem;line-height:1.55;color:#e6edf3;margin-bottom:1rem}
+  .pista .escenario{display:block;font-size:.8rem;color:var(--tenue);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+  .btn-trad{display:block;margin-top:.7rem;font-size:.76rem;font-weight:600;padding:.3rem .7rem;border-radius:8px;background:#0d1117;color:var(--azul);border:1px solid var(--linea);cursor:pointer;font-family:var(--sans)}
+  .btn-trad:hover{border-color:var(--azul)}
+  .opciones{display:grid;gap:.55rem}
+  .opcion{text-align:left;background:#0d1117;border:1px solid var(--linea);border-radius:10px;padding:.75rem .9rem;font-size:.92rem;font-weight:600;color:var(--tinta);cursor:pointer;width:100%}
+  .opcion:hover:not([disabled]){border-color:var(--verde)}
+  .opcion.acierto{background:var(--verde-suave);border-color:var(--verde);color:var(--verde)}
+  .opcion.fallo{background:var(--rojo-suave);border-color:var(--rojo);color:var(--rojo)}
+  .opcion[disabled]{cursor:default}
+
+  .feedback{display:none;margin-top:1rem;border-radius:10px;padding:.9rem 1rem;border:1px solid}
+  .feedback.bien{display:block;background:var(--verde-suave);border-color:var(--verde)}
+  .feedback.mal{display:block;background:var(--rojo-suave);border-color:var(--rojo)}
+  .feedback h3{font-size:.95rem;margin-bottom:.4rem;color:#e6edf3}
+  .feedback .clave{font-size:.9rem;line-height:1.55}
+  .feedback .clave b{color:#e6edf3}
+  .feedback .contraste{margin-top:.6rem;padding-top:.6rem;border-top:1px dashed var(--linea);font-size:.86rem;line-height:1.5;color:var(--tenue)}
+  .feedback .contraste b{color:var(--tinta)}
+
+  /* Resumen final */
+  #resumen{display:none}
+  .fallo-item{border-left:3px solid var(--rojo);background:#0d1117;border-radius:0 8px 8px 0;padding:.6rem .8rem;margin-top:.5rem;font-size:.86rem;line-height:1.45}
+  .fallo-item b{color:#e6edf3}
+
+  /* Añadir propios */
+  .campo{margin-bottom:.7rem}
+  .campo label{display:block;font-size:.8rem;font-weight:600;color:#e6edf3;margin-bottom:.25rem}
+  .campo input{width:100%;font-size:.88rem;border:1px solid var(--linea);border-radius:9px;padding:.55rem .7rem;background:#0d1117;color:var(--tinta);font-family:var(--sans)}
+  .campo input:focus{outline:2px solid var(--verde)}
+  .mios{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem}
+  .mio{font-size:.76rem;background:rgba(188,140,255,.14);border:1px solid var(--violeta);color:var(--violeta);border-radius:10px;padding:.25rem .3rem .25rem .6rem;display:flex;align-items:center;gap:.35rem}
+  .mio button{border:none;background:none;color:var(--violeta);cursor:pointer;font-size:.9rem;padding:0 .25rem}
+
+  .aviso{display:flex;gap:.6rem;align-items:flex-start;background:var(--ambar-suave);border:1px solid var(--ambar);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;line-height:1.5;color:#e3b341;margin-top:1rem}
+  footer{margin-top:1.8rem;font-size:.76rem;color:var(--tenue);text-align:center;line-height:1.6}
+  footer code{font-family:var(--mono);color:var(--verde)}
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <header>
+    <h1>Confundibles</h1>
+    <p>Los pares que CompTIA usa para hacerte dudar en el SY0-701. No es un simulador de examen: ataca solo donde se falla, la distinción que decide la respuesta.</p>
+  </header>
+
+  <div class="panel" id="config">
+    <label class="tit">Dominios a practicar</label>
+    <div class="filtros" id="filtros"></div>
+    <div class="botones">
+      <button class="btn-pri" id="btnEmpezar">Empezar ronda</button>
+      <button class="btn-sec" id="btnTodos">Todos</button>
+    </div>
+    <div class="aviso"><span>⚠</span><span>Refuerzo, no sustituto del temario. Si algo aquí contradice a <b>Professor Messer</b> o a los objetivos oficiales de CompTIA, manda Messer.</span></div>
+  </div>
+
+  <div class="panel" id="zona">
+    <div class="marcador">
+      <span>Pregunta <b id="mNum">1</b> / <span id="mTotal">0</span></span>
+      <span>Aciertos <b id="mBien">0</b></span>
+      <span class="mal">Fallos <b id="mMal">0</b></span>
+    </div>
+    <div class="barra"><i id="mBarra"></i></div>
+
+    <div style="margin-top:1.1rem">
+      <span class="dominio-et" id="domEt"></span>
+      <div class="pista" id="pista"></div>
+      <div class="opciones" id="opciones"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="botones">
+        <button class="btn-pri" id="btnSiguiente" style="display:none">Siguiente</button>
+        <button class="btn-sec" id="btnSalir">Terminar ronda</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="resumen"></div>
+
+  <div class="panel">
+    <label class="tit">Añade tus propios confundibles</label>
+    <p style="font-size:.83rem;color:var(--tenue);line-height:1.45;margin-bottom:.8rem">Cuando falles algo en ExamCompass, mételo aquí y entrará en las rondas. Se guarda en este dispositivo.</p>
+    <div class="campo"><label for="cA">Concepto A</label><input id="cA" placeholder="Race condition" autocomplete="off"></div>
+    <div class="campo"><label for="cB">Concepto B</label><input id="cB" placeholder="TOCTOU" autocomplete="off"></div>
+    <div class="campo"><label for="cPista">Pista / escenario</label><input id="cPista" placeholder="Comprobar y luego usar, con hueco entre medias" autocomplete="off"></div>
+    <div class="campo"><label for="cResp">¿Cuál es la respuesta? (escribe A o B)</label><input id="cResp" placeholder="B" autocomplete="off"></div>
+    <div class="campo"><label for="cClave">La distinción que decide</label><input id="cClave" placeholder="TOCTOU es un tipo de race condition: check → use" autocomplete="off"></div>
+    <div class="botones"><button class="btn-sec" id="btnAdd">Añadir a mis confundibles</button></div>
+    <div class="mios" id="mios"></div>
+  </div>
+
+  <footer>
+    Local y sin conexión · basado en los objetivos del SY0-701<br>
+    <code>&gt; la palabra clave decide la respuesta</code>
+  </footer>
+</div>
+
+<script>
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+
+/* ============================================================
+   CATÁLOGO DE CONFUNDIBLES — SY0-701
+   Cada entrada: dominio, escenario (la pregunta trampa típica),
+   opciones, respuesta correcta, clave (por qué) y contraste (el otro).
+   ============================================================ */
+var DOMINIOS = {
+  d1:"1 · Conceptos generales",
+  d2:"2 · Amenazas y vulnerabilidades",
+  d3:"3 · Arquitectura de seguridad",
+  d4:"4 · Operaciones de seguridad",
+  d5:"5 · Gestión, riesgo y cumplimiento"
+};
+
+var CATALOGO = [
+  // ---------- Domain 2: threats, attacks, social engineering ----------
+  {d:"d2",
+   esc:"An attacker injects code that executes in the browsers of other users visiting the page.",
+   ops:["SQL Injection","Cross-Site Scripting (XSS)"], ok:1,
+   clave:"If the victim is <b>the user</b> and <b>JavaScript runs in their browser</b>, it is XSS.",
+   contra:"<b>SQLi</b> targets the server's <b>database</b>. Rule: if the question mentions a database or queries, it is SQLi.",
+   es:{esc:"Un atacante inyecta código que se ejecuta en el navegador de otros usuarios que visitan la página.",
+       ops:["Inyección SQL","Cross-Site Scripting (XSS)"],
+       clave:"Si la víctima es <b>el usuario</b> y se ejecuta <b>JavaScript en su navegador</b>, es XSS.",
+       contra:"<b>SQLi</b> ataca la <b>base de datos</b> del servidor. Regla: si menciona base de datos o consultas, es SQLi."}},
+
+  {d:"d2",
+   esc:"Database queries are manipulated to extract unauthorized information.",
+   ops:["Cross-Site Scripting (XSS)","SQL Injection"], ok:1,
+   clave:"The deciding word is <b>database</b>: that is SQLi.",
+   contra:"<b>XSS</b> never touches the database: it runs script in the victim's browser.",
+   es:{esc:"Se manipulan las consultas a la base de datos para extraer información no autorizada.",
+       ops:["Cross-Site Scripting (XSS)","Inyección SQL"],
+       clave:"La palabra que decide es <b>base de datos</b>: eso es SQLi.",
+       contra:"<b>XSS</b> no toca la base de datos: ejecuta script en el navegador de la víctima."}},
+
+  {d:"d2",
+   esc:"You get a phone call from someone claiming to be your bank, asking for your verification code.",
+   ops:["Vishing","Pharming"], ok:0,
+   clave:"<b>Vishing</b> = voice phishing. If there is a <b>phone call or voice</b>, it is vishing.",
+   contra:"<b>Pharming</b> redirects web traffic (poisoned DNS) to a fake site, with no call involved.",
+   es:{esc:"Recibes una llamada telefónica de alguien que dice ser del banco y te pide el código de verificación.",
+       ops:["Vishing","Pharming"],
+       clave:"<b>Vishing</b> = voice phishing. Si hay <b>teléfono o llamada</b>, es vishing.",
+       contra:"<b>Pharming</b> redirige tráfico web (DNS envenenado) a un sitio falso, sin llamada de por medio."}},
+
+  {d:"d2",
+   esc:"DNS is poisoned so that even typing the correct URL lands you on a fake website.",
+   ops:["Pharming","Vishing"], ok:0,
+   clave:"<b>Pharming</b>: redirection of web traffic, usually via DNS or the hosts file.",
+   contra:"<b>Vishing</b> happens by voice or phone. Here there is no call, only technical redirection.",
+   es:{esc:"Envenenan el DNS para que, aun escribiendo bien la URL, acabes en una web falsa.",
+       ops:["Pharming","Vishing"],
+       clave:"<b>Pharming</b>: redirección del tráfico web, normalmente vía DNS o el fichero hosts.",
+       contra:"<b>Vishing</b> es por voz o teléfono. Aquí no hay llamada, hay redirección técnica."}},
+
+  {d:"d2",
+   esc:"Someone shares false news genuinely believing it is true.",
+   ops:["Misinformation","Disinformation"], ok:0,
+   clave:"The key is <b>intent</b>. <b>Mis</b>information = <b>without</b> intent to deceive.",
+   contra:"<b>Dis</b>information = deliberate intent to deceive.",
+   es:{esc:"Alguien comparte una noticia falsa creyendo de buena fe que es cierta.",
+       ops:["Misinformation","Disinformation"],
+       clave:"La clave es la <b>intención</b>. <b>Mis</b>information = <b>sin</b> intención de engañar.",
+       contra:"<b>Dis</b>information = <b>con</b> intención deliberada de engañar."}},
+
+  {d:"d2",
+   esc:"A nation-state deliberately spreads false data to influence an election.",
+   ops:["Misinformation","Disinformation"], ok:1,
+   clave:"There is <b>deliberate intent</b> to deceive: disinformation.",
+   contra:"<b>Misinformation</b> would be the same false content, spread without knowing it is false.",
+   es:{esc:"Un estado difunde datos falsos deliberadamente para influir en una elección.",
+       ops:["Misinformation","Disinformation"],
+       clave:"Hay <b>intención deliberada</b> de engañar: disinformation.",
+       contra:"<b>Misinformation</b> sería el mismo contenido falso, difundido sin saber que lo es."}},
+
+  {d:"d2",
+   esc:"A website is built to visually imitate a well-known company in order to harvest credentials.",
+   ops:["Brand impersonation","Identity fraud"], ok:0,
+   clave:"A <b>brand or company</b> is being impersonated: brand impersonation.",
+   contra:"<b>Identity fraud</b> is using <b>a specific person's</b> data to pose as them.",
+   es:{esc:"Crean una web que imita visualmente a una marca conocida para captar credenciales.",
+       ops:["Brand impersonation","Identity fraud"],
+       clave:"Se suplanta a <b>una marca o empresa</b>: brand impersonation.",
+       contra:"<b>Identity fraud</b> es usar los datos de <b>una persona concreta</b> para hacerse pasar por ella."}},
+
+  {d:"d2",
+   esc:"A product is no longer sold, but the vendor still releases security patches.",
+   ops:["EOL (End of Life)","EOSL (End of Service Life)"], ok:0,
+   clave:"<b>EOL</b>: no longer sold, but support <b>may</b> continue.",
+   contra:"<b>EOSL</b> is the dangerous one: no support and no security patches at all.",
+   es:{esc:"Un producto ya no se vende, pero el fabricante aún publica parches de seguridad.",
+       ops:["EOL (End of Life)","EOSL (End of Service Life)"],
+       clave:"<b>EOL</b>: deja de venderse, pero <b>puede</b> seguir con soporte.",
+       contra:"<b>EOSL</b> es el peligroso: sin soporte ni parches de seguridad. Fuente válida: Messer."}},
+
+  {d:"d2",
+   esc:"The vendor has ended support and will never release another security patch.",
+   ops:["EOL","EOSL"], ok:1,
+   clave:"<b>EOSL</b>: end of <b>service</b>. No patches means critical risk; it needs compensating controls.",
+   contra:"<b>EOL</b> only means it stopped being sold; it may still receive patches for a while.",
+   es:{esc:"El fabricante ha dejado de dar soporte y ya no publicará ningún parche de seguridad.",
+       ops:["EOL","EOSL"],
+       clave:"<b>EOSL</b>: fin del <b>servicio</b>. Sin parches = riesgo crítico, necesita controles compensatorios.",
+       contra:"<b>EOL</b> solo significa que dejó de comercializarse; puede seguir parcheándose un tiempo."}},
+
+  {d:"d2",
+   esc:"A program checks a permission, and between the check and the use, the attacker swaps the resource.",
+   ops:["Generic race condition","TOCTOU"], ok:1,
+   clave:"<b>TOCTOU</b> = Time Of Check / Time Of Use: <b>check → use</b> with an exploitable gap.",
+   contra:"Every TOCTOU <b>is</b> a race condition, but not every race condition is TOCTOU. TOCTOU is the subtype.",
+   es:{esc:"Un programa comprueba un permiso y, entre la comprobación y el uso, el atacante cambia el recurso.",
+       ops:["Race condition genérica","TOCTOU"],
+       clave:"<b>TOCTOU</b> = Time Of Check / Time Of Use: <b>check → use</b> con hueco explotable.",
+       contra:"Toda TOCTOU <b>es</b> una race condition, pero no toda race condition es TOCTOU. TOCTOU es el subtipo."}},
+
+  {d:"d2",
+   esc:"Attackers compromise a legitimate website frequently visited by the target company's staff.",
+   ops:["Watering hole attack","Spear phishing"], ok:0,
+   clave:"<b>Watering hole</b>: the <b>site where the victim drinks</b> is infected, then the attacker waits.",
+   contra:"<b>Spear phishing</b> targets a specific person by message, not by compromising a site.",
+   es:{esc:"Comprometen una web legítima que suele visitar el personal de la empresa objetivo.",
+       ops:["Watering hole","Spear phishing"],
+       clave:"<b>Watering hole</b>: se infecta el <b>sitio donde abreva</b> la víctima y se espera a que caiga.",
+       contra:"<b>Spear phishing</b> va dirigido a una persona concreta por mensaje, no comprometiendo un sitio."}},
+
+  {d:"d2",
+   esc:"A highly personalized email is sent to the CFO of a specific company.",
+   ops:["Mass phishing","Whaling"], ok:1,
+   clave:"<b>Whaling</b>: spear phishing aimed at a <b>big fish</b> (executive, senior role).",
+   contra:"Generic <b>phishing</b> is sent in bulk with no personalization.",
+   es:{esc:"Correo muy personalizado dirigido al director financiero de una empresa concreta.",
+       ops:["Phishing masivo","Whaling"],
+       clave:"<b>Whaling</b>: spear phishing contra un <b>pez gordo</b> (directivo, alto cargo).",
+       contra:"El <b>phishing</b> genérico se envía masivamente sin personalizar."}},
+
+  {d:"d2",
+   esc:"Malware that replicates across the network on its own, with no user action required.",
+   ops:["Virus","Worm"], ok:1,
+   clave:"<b>Worm</b>: spreads <b>by itself</b>, needing no host file and no user interaction.",
+   contra:"A <b>virus</b> needs a host file and someone to execute it.",
+   es:{esc:"Malware que se replica solo por la red sin necesidad de que nadie lo ejecute.",
+       ops:["Virus","Gusano (worm)"],
+       clave:"<b>Gusano</b>: se propaga <b>solo</b>, sin anfitrión ni interacción del usuario.",
+       contra:"El <b>virus</b> necesita un archivo anfitrión y que alguien lo ejecute."}},
+
+  {d:"d2",
+   esc:"A program looks legitimate but opens a backdoor when executed.",
+   ops:["Trojan","Worm"], ok:0,
+   clave:"<b>Trojan</b>: <b>disguises</b> itself as legitimate software so you run it yourself.",
+   contra:"A <b>worm</b> does not need to trick you: it propagates on its own.",
+   es:{esc:"Programa que aparenta ser legítimo pero abre una puerta trasera al ejecutarlo.",
+       ops:["Troyano","Gusano"],
+       clave:"<b>Troyano</b>: se <b>disfraza</b> de software legítimo para que lo ejecutes tú.",
+       contra:"El <b>gusano</b> no necesita engañarte: se propaga por sí mismo."}},
+
+  {d:"d2",
+   esc:"A vulnerability unknown to the vendor, with no patch available.",
+   ops:["Zero-day","Known CVE"], ok:0,
+   clave:"<b>Zero-day</b>: zero days of warning, no patch exists yet.",
+   contra:"A published <b>CVE</b> is already catalogued and usually has a patch or mitigation.",
+   es:{esc:"Vulnerabilidad desconocida para el fabricante y sin parche disponible.",
+       ops:["Zero-day","CVE conocida"],
+       clave:"<b>Zero-day</b>: cero días de aviso, no existe parche todavía.",
+       contra:"Una <b>CVE</b> publicada ya está catalogada y suele tener parche o mitigación."}},
+
+  // ---------- Domains 1 & 3: cryptography ----------
+  {d:"d1",
+   esc:"The same key is used to encrypt and decrypt. Very fast, ideal for large volumes of data.",
+   ops:["Symmetric encryption","Asymmetric encryption"], ok:0,
+   clave:"<b>Symmetric</b>: one shared key (AES). Fast, but the key must be distributed safely.",
+   contra:"<b>Asymmetric</b> uses a public/private pair (RSA): it solves distribution but is slower.",
+   es:{esc:"Se usa la misma clave para cifrar y descifrar. Muy rápido, ideal para grandes volúmenes.",
+       ops:["Cifrado simétrico","Cifrado asimétrico"],
+       clave:"<b>Simétrico</b>: una sola clave compartida (AES). Rápido, pero hay que distribuir la clave.",
+       contra:"<b>Asimétrico</b> usa par pública/privada (RSA): resuelve la distribución, pero es más lento."}},
+
+  {d:"d1",
+   esc:"We encrypt with the recipient's public key so that only they can read it.",
+   ops:["Symmetric","Asymmetric"], ok:1,
+   clave:"<b>Asymmetric</b>: public key encrypts, private key decrypts. This provides confidentiality.",
+   contra:"Reversed (private signs, public verifies) you get <b>authenticity</b>, not confidentiality.",
+   es:{esc:"Ciframos con la clave pública del destinatario para que solo él pueda leerlo.",
+       ops:["Simétrico","Asimétrico"],
+       clave:"<b>Asimétrico</b>: la clave pública cifra, la privada descifra. Da confidencialidad.",
+       contra:"Al revés (privada firma, pública verifica) obtienes <b>autenticidad</b>, no confidencialidad."}},
+
+  {d:"d1",
+   esc:"A one-way function producing a fixed-length fingerprint that cannot be reversed.",
+   ops:["Hashing","Encryption"], ok:0,
+   clave:"<b>Hashing</b> is <b>irreversible</b> and provides <b>integrity</b> (SHA-256).",
+   contra:"<b>Encryption</b> is reversible with the key: it provides <b>confidentiality</b>.",
+   es:{esc:"Función de un solo sentido que produce una huella fija y no se puede revertir.",
+       ops:["Hashing","Cifrado"],
+       clave:"<b>Hashing</b> es <b>irreversible</b> y sirve para <b>integridad</b> (SHA-256).",
+       contra:"El <b>cifrado</b> es reversible con la clave: sirve para <b>confidencialidad</b>."}},
+
+  {d:"d1",
+   esc:"A random value is added to each password before hashing it.",
+   ops:["Salting","Key stretching"], ok:0,
+   clave:"<b>Salt</b>: a unique value per password that defeats rainbow tables.",
+   contra:"<b>Key stretching</b> (bcrypt, PBKDF2) makes the computation deliberately <b>slow</b>. They are usually combined.",
+   es:{esc:"Se añade un valor aleatorio a cada contraseña antes de aplicar el hash.",
+       ops:["Salting","Key stretching"],
+       clave:"<b>Salt</b>: valor único por contraseña que anula las tablas rainbow.",
+       contra:"<b>Key stretching</b> (bcrypt, PBKDF2) hace el cálculo <b>lento</b> a propósito. Suelen ir juntos."}},
+
+  {d:"d1",
+   esc:"Ensures the sender cannot later deny having sent the message.",
+   ops:["Non-repudiation","Confidentiality"], ok:0,
+   clave:"<b>Non-repudiation</b>: achieved with a <b>digital signature</b> (sender's private key).",
+   contra:"<b>Confidentiality</b> only stops others from reading it; it does not prove who sent it.",
+   es:{esc:"Garantiza que el emisor no pueda negar después que envió el mensaje.",
+       ops:["No repudio","Confidencialidad"],
+       clave:"<b>No repudio</b>: se logra con <b>firma digital</b> (clave privada del emisor).",
+       contra:"La <b>confidencialidad</b> solo impide que otros lo lean; no prueba quién lo mandó."}},
+
+  // ---------- Domain 3: IAM and architecture ----------
+  {d:"d3",
+   esc:"The system verifies you are who you claim to be using a username and password.",
+   ops:["Authentication","Authorization"], ok:0,
+   clave:"<b>Authentication</b> = <b>who you are</b>. It happens first.",
+   contra:"<b>Authorization</b> = <b>what you may do</b> once identified. It comes after.",
+   es:{esc:"El sistema comprueba que eres quien dices ser mediante usuario y contraseña.",
+       ops:["Autenticación","Autorización"],
+       clave:"<b>Autenticación</b> = <b>quién eres</b>. Ocurre primero.",
+       contra:"<b>Autorización</b> = <b>qué puedes hacer</b> una vez identificado. Va después."}},
+
+  {d:"d3",
+   esc:"You have already logged in, and the system decides whether you may delete that file.",
+   ops:["Authentication","Authorization"], ok:1,
+   clave:"<b>Authorization</b>: it defines permissions over resources.",
+   contra:"<b>Authentication</b> already happened: that was proving your identity.",
+   es:{esc:"Ya has iniciado sesión y el sistema decide si puedes borrar ese fichero.",
+       ops:["Autenticación","Autorización"],
+       clave:"<b>Autorización</b>: define permisos sobre recursos.",
+       contra:"La <b>autenticación</b> ya pasó: era el paso de demostrar identidad."}},
+
+  {d:"d3",
+   esc:"Permissions are granted according to job function: 'accountant', 'administrator'.",
+   ops:["RBAC","ABAC"], ok:0,
+   clave:"<b>RBAC</b>: access based on <b>roles</b> (the job defines the access).",
+   contra:"<b>ABAC</b> uses <b>attributes</b> (time, location, device): more granular and dynamic.",
+   es:{esc:"Los permisos se asignan según el puesto de trabajo: 'contable', 'administrador'.",
+       ops:["RBAC","ABAC"],
+       clave:"<b>RBAC</b>: control basado en <b>roles</b> (el puesto define el acceso).",
+       contra:"<b>ABAC</b> usa <b>atributos</b> (hora, ubicación, dispositivo): más granular y dinámico."}},
+
+  {d:"d3",
+   esc:"Password plus a code from your phone: two proofs from different categories.",
+   ops:["MFA","SSO"], ok:0,
+   clave:"<b>MFA</b>: several distinct <b>factors</b> (something you know / have / are).",
+   contra:"<b>SSO</b> is the opposite in purpose: <b>one</b> authentication grants access to many services.",
+   es:{esc:"Contraseña + código del móvil: dos pruebas de categorías distintas.",
+       ops:["MFA","SSO"],
+       clave:"<b>MFA</b>: varios <b>factores</b> distintos (algo que sabes / tienes / eres).",
+       contra:"<b>SSO</b> es lo contrario en propósito: <b>una</b> autenticación da acceso a varios servicios."}},
+
+  {d:"d3",
+   esc:"The provider manages the operating system and you only deploy your application.",
+   ops:["IaaS","PaaS"], ok:1,
+   clave:"<b>PaaS</b>: you get the <b>platform</b> (OS and runtime); you supply only the code.",
+   contra:"<b>IaaS</b> gives you a bare virtual machine: <b>you</b> manage the OS.",
+   es:{esc:"El proveedor gestiona el sistema operativo y tú solo subes tu aplicación.",
+       ops:["IaaS","PaaS"],
+       clave:"<b>PaaS</b>: te dan la <b>plataforma</b> (SO y runtime); tú pones solo el código.",
+       contra:"<b>IaaS</b> te da la máquina virtual desnuda: el SO lo gestionas <b>tú</b>."}},
+
+  {d:"d3",
+   esc:"A network segment hosting internet-facing servers, isolated from the internal network.",
+   ops:["DMZ","VLAN"], ok:0,
+   clave:"<b>DMZ</b>: exposed intermediate zone; protects the internal network if those servers fall.",
+   contra:"<b>VLAN</b> is internal logical segmentation; it does not imply internet exposure.",
+   es:{esc:"Segmento de red donde se colocan los servidores accesibles desde internet, aislados de la red interna.",
+       ops:["DMZ","VLAN"],
+       clave:"<b>DMZ</b>: zona intermedia expuesta; protege la red interna si caen esos servidores.",
+       contra:"<b>VLAN</b> es segmentación lógica interna, no implica exposición a internet."}},
+
+  // ---------- Domain 4: security operations ----------
+  {d:"d4",
+   esc:"It detects malicious traffic and raises an alert, but does not block it.",
+   ops:["IDS","IPS"], ok:0,
+   clave:"<b>IDS</b>: only <b>detects</b> and alerts. Passive, sits out of band.",
+   contra:"<b>IPS</b> also <b>prevents</b>: it sits inline and drops the traffic.",
+   es:{esc:"Detecta tráfico malicioso y genera una alerta, pero no lo bloquea.",
+       ops:["IDS","IPS"],
+       clave:"<b>IDS</b>: solo <b>detecta</b> y avisa. Es pasivo, va fuera de línea.",
+       contra:"<b>IPS</b> además <b>previene</b>: está en línea y corta el tráfico."}},
+
+  {d:"d4",
+   esc:"It sits inline with the traffic and automatically blocks the malicious packet.",
+   ops:["IDS","IPS"], ok:1,
+   clave:"<b>IPS</b>: active prevention, it drops the connection.",
+   contra:"An <b>IDS</b> would only have raised the alert without stopping anything.",
+   es:{esc:"Está en línea con el tráfico y bloquea automáticamente el paquete malicioso.",
+       ops:["IDS","IPS"],
+       clave:"<b>IPS</b>: prevención activa, corta la conexión.",
+       contra:"El <b>IDS</b> solo habría generado la alerta sin detener nada."}},
+
+  {d:"d4",
+   esc:"It centralizes and correlates logs from across the organization to detect incidents.",
+   ops:["SIEM","SOAR"], ok:0,
+   clave:"<b>SIEM</b>: collects, correlates and alerts on <b>events</b>.",
+   contra:"<b>SOAR</b> goes one step further: it <b>automates the response</b> (playbooks) after detection.",
+   es:{esc:"Centraliza y correlaciona logs de toda la organización para detectar incidentes.",
+       ops:["SIEM","SOAR"],
+       clave:"<b>SIEM</b>: recolecta, correlaciona y alerta sobre <b>eventos</b>.",
+       contra:"<b>SOAR</b> va un paso más: <b>automatiza la respuesta</b> (playbooks) tras la detección."}},
+
+  {d:"d4",
+   esc:"It automatically runs a playbook that isolates the host and opens a ticket.",
+   ops:["SIEM","SOAR"], ok:1,
+   clave:"<b>SOAR</b>: orchestration and <b>automated response</b>.",
+   contra:"A <b>SIEM</b> would have detected and alerted, but a human would take the action.",
+   es:{esc:"Ejecuta automáticamente un playbook que aísla el equipo y abre un ticket.",
+       ops:["SIEM","SOAR"],
+       clave:"<b>SOAR</b>: orquestación y <b>respuesta automatizada</b>.",
+       contra:"El <b>SIEM</b> habría detectado y alertado, pero la acción la haría un humano."}},
+
+  {d:"d4",
+   esc:"A weakness in a system that could be taken advantage of.",
+   ops:["Vulnerability","Threat"], ok:0,
+   clave:"<b>Vulnerability</b> = the <b>weakness</b> (the badly locked door).",
+   contra:"<b>Threat</b> = the actor or event that could exploit it (the burglar). <b>Risk</b> = likelihood × impact.",
+   es:{esc:"Debilidad en un sistema que podría ser aprovechada.",
+       ops:["Vulnerabilidad","Amenaza"],
+       clave:"<b>Vulnerabilidad</b> = la <b>debilidad</b> (la puerta mal cerrada).",
+       contra:"<b>Amenaza</b> = el agente o evento que podría explotarla (el ladrón). <b>Riesgo</b> = probabilidad × impacto."}},
+
+  {d:"d4",
+   esc:"After containing the incident, you remove the malware and the accounts created by the attacker.",
+   ops:["Containment","Eradication"], ok:1,
+   clave:"<b>Eradication</b>: removing the root cause. It comes <b>after</b> containment.",
+   contra:"<b>Containment</b> is stopping the spread (isolating the host), without cleaning up yet.",
+   es:{esc:"Tras contener el incidente, eliminas el malware y las cuentas creadas por el atacante.",
+       ops:["Contención","Erradicación"],
+       clave:"<b>Erradicación</b>: quitar la causa raíz. Va <b>después</b> de contener.",
+       contra:"<b>Contención</b> es frenar la propagación (aislar el equipo), sin limpiar todavía."}},
+
+  {d:"d4",
+   esc:"The correct order of the incident response phases according to NIST.",
+   ops:["Preparation → Detection → Containment → Eradication → Recovery → Lessons learned","Detection → Preparation → Eradication → Containment → Recovery"], ok:0,
+   clave:"Preparation, Detection and analysis, Containment, Eradication, Recovery, Lessons learned.",
+   contra:"<b>Preparation</b> always comes first (before the incident) and <b>lessons learned</b> always closes.",
+   es:{esc:"Orden correcto de las fases de respuesta a incidentes según NIST.",
+       ops:["Preparación → Detección → Contención → Erradicación → Recuperación → Lecciones","Detección → Preparación → Erradicación → Contención → Recuperación"],
+       clave:"Preparación, Detección y análisis, Contención, Erradicación, Recuperación, Lecciones aprendidas.",
+       contra:"La <b>preparación</b> siempre va primero (antes del incidente) y <b>lecciones</b> siempre cierra."}},
+
+  {d:"d4",
+   esc:"It copies only what changed since the last full backup; restoring needs the full plus the latest one.",
+   ops:["Incremental","Differential"], ok:1,
+   clave:"<b>Differential</b>: grows each day, but restoring needs only <b>full + latest differential</b>.",
+   contra:"<b>Incremental</b> copies what changed since the <b>last backup of any kind</b>: slower restore (full + all of them).",
+   es:{esc:"Copia solo lo modificado desde la última copia completa; restaurar exige la completa más la última.",
+       ops:["Incremental","Diferencial"],
+       clave:"<b>Diferencial</b>: crece cada día, pero al restaurar solo necesitas <b>full + última diferencial</b>.",
+       contra:"<b>Incremental</b> copia lo cambiado desde la <b>última copia cualquiera</b>: restauración más lenta (full + todas)."}},
+
+  {d:"d4",
+   esc:"A legitimate user is blocked by the detection system, which considers them malicious.",
+   ops:["False positive","False negative"], ok:0,
+   clave:"<b>False positive</b>: the alarm fires with no real attack.",
+   contra:"<b>False negative</b> is worse: there is a real attack and it is <b>not</b> detected.",
+   es:{esc:"Un usuario legítimo es bloqueado por el sistema de detección al considerarlo malicioso.",
+       ops:["Falso positivo","Falso negativo"],
+       clave:"<b>Falso positivo</b>: salta la alarma sin haber ataque real.",
+       contra:"<b>Falso negativo</b> es peor: hay ataque real y <b>no</b> se detecta."}},
+
+  // ---------- Domain 5: governance, risk and compliance ----------
+  {d:"d5",
+   esc:"The maximum time the business can be without the service after a disaster.",
+   ops:["RTO","RPO"], ok:0,
+   clave:"<b>RTO</b> = Recovery <b>Time</b> Objective: how long until you are operational again.",
+   contra:"<b>RPO</b> = Recovery <b>Point</b> Objective: how much <b>data</b> you can afford to lose (it sets backup frequency).",
+   es:{esc:"Tiempo máximo que el negocio puede estar sin el servicio tras un desastre.",
+       ops:["RTO","RPO"],
+       clave:"<b>RTO</b> = Recovery <b>Time</b>: cuánto tiempo hasta volver a estar operativo.",
+       contra:"<b>RPO</b> = Recovery <b>Point</b>: cuántos <b>datos</b> puedes permitirte perder (marca la frecuencia de backup)."}},
+
+  {d:"d5",
+   esc:"The maximum amount of data the company accepts losing, measured in time.",
+   ops:["RTO","RPO"], ok:1,
+   clave:"<b>RPO</b>: recovery point. It determines how often you take backups.",
+   contra:"<b>RTO</b> measures the time to restore the service, not the data loss.",
+   es:{esc:"Cantidad máxima de datos que la empresa acepta perder, medida en tiempo.",
+       ops:["RTO","RPO"],
+       clave:"<b>RPO</b>: punto de recuperación. Define cada cuánto haces copias.",
+       contra:"<b>RTO</b> mide el tiempo de restauración del servicio, no la pérdida de datos."}},
+
+  {d:"d5",
+   esc:"The average time taken to repair a system after a failure.",
+   ops:["MTBF","MTTR"], ok:1,
+   clave:"<b>MTTR</b> = Mean Time To <b>Repair</b>: how long it takes to fix it.",
+   contra:"<b>MTBF</b> = Mean Time <b>Between Failures</b>: how often it breaks (reliability).",
+   es:{esc:"Tiempo medio que se tarda en reparar un sistema tras un fallo.",
+       ops:["MTBF","MTTR"],
+       clave:"<b>MTTR</b> = Mean Time To <b>Repair</b>: cuánto se tarda en arreglarlo.",
+       contra:"<b>MTBF</b> = Mean Time <b>Between Failures</b>: cada cuánto se rompe (fiabilidad)."}},
+
+  {d:"d5",
+   esc:"An internationally certifiable standard for an information security management system.",
+   ops:["ISO 27001","NIST CSF"], ok:0,
+   clave:"<b>ISO 27001</b> is <b>certifiable</b>: you get audited and receive the certificate.",
+   contra:"<b>NIST CSF</b> is a <b>voluntary framework</b> (Identify, Protect, Detect, Respond, Recover); it is not certified.",
+   es:{esc:"Norma internacional certificable para un sistema de gestión de la seguridad de la información.",
+       ops:["ISO 27001","NIST CSF"],
+       clave:"<b>ISO 27001</b> es <b>certificable</b>: auditas y obtienes el sello.",
+       contra:"<b>NIST CSF</b> es un <b>marco voluntario</b> (Identificar, Proteger, Detectar, Responder, Recuperar), no se certifica."}},
+
+  {d:"d5",
+   esc:"The company buys insurance to cover the losses from a cyberattack.",
+   ops:["Risk transference","Risk acceptance"], ok:0,
+   clave:"<b>Transference</b>: you pass the financial impact to a third party (insurer, provider).",
+   contra:"<b>Acceptance</b> would be assuming it and doing nothing. The others: <b>mitigate</b> (reduce) and <b>avoid</b> (stop the activity).",
+   es:{esc:"La empresa contrata un seguro para cubrir las pérdidas de un ciberataque.",
+       ops:["Transferir el riesgo","Aceptar el riesgo"],
+       clave:"<b>Transferencia</b>: pasas el impacto económico a un tercero (seguro, proveedor).",
+       contra:"<b>Aceptar</b> sería asumirlo sin hacer nada. Las otras: <b>mitigar</b> (reducir) y <b>evitar</b> (no hacer la actividad)."}},
+
+  {d:"d5",
+   esc:"A legacy system cannot be patched, so you isolate it in a VLAN with restricted access.",
+   ops:["Compensating control","Standard preventive control"], ok:0,
+   clave:"<b>Compensating</b>: an alternative measure when the ideal control (patching) <b>is not feasible</b>.",
+   contra:"Key for real Blue Team work: legacy systems that cannot be touched live on compensating controls.",
+   es:{esc:"Un sistema legacy no se puede parchear, así que lo aíslas en una VLAN con acceso restringido.",
+       ops:["Control compensatorio","Control preventivo estándar"],
+       clave:"<b>Compensatorio</b>: medida alternativa cuando el control ideal (parchear) <b>no es viable</b>.",
+       contra:"Clave para Blue Team real: los sistemas legacy que no se pueden tocar viven de controles compensatorios."}},
+
+  {d:"d5",
+   esc:"A document defining what may and may not be done with company equipment.",
+   ops:["AUP","SLA"], ok:0,
+   clave:"<b>AUP</b> = Acceptable Use Policy: acceptable use of company resources.",
+   contra:"<b>SLA</b> is a <b>service level agreement</b> with a provider (committed availability).",
+   es:{esc:"Documento que define qué se puede y no se puede hacer con los equipos de la empresa.",
+       ops:["AUP","SLA"],
+       clave:"<b>AUP</b> = Acceptable Use Policy: uso aceptable de los recursos.",
+       contra:"<b>SLA</b> es un acuerdo de <b>nivel de servicio</b> con un proveedor (disponibilidad comprometida)."}}
+];
+
+/* ---------- Estado ---------- */
+var CLAVE_MIOS = "confundibles_mios_v1";
+var seleccion = {d1:true,d2:true,d3:true,d4:true,d5:true};
+var ronda = [], idx = 0, bien = 0, mal = 0, fallos = [], respondida = false;
+
+/* ---------- Confundibles propios ---------- */
+function mios(){ try { return JSON.parse(localStorage.getItem(CLAVE_MIOS)) || []; } catch(e){ return []; } }
+function guardarMios(a){ try { localStorage.setItem(CLAVE_MIOS, JSON.stringify(a)); } catch(e){} }
+function pintarMios(){
+  var lista = mios(), cont = $("mios");
+  cont.innerHTML = lista.map(function(m,i){
+    return '<span class="mio">' + esc(m.ops[0]) + " vs " + esc(m.ops[1]) +
+           '<button data-i="' + i + '" aria-label="Quitar">×</button></span>';
+  }).join("");
+  cont.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      var l = mios(); l.splice(+b.dataset.i,1); guardarMios(l); pintarMios();
+    });
+  });
+}
+$("btnAdd").addEventListener("click", function(){
+  var a = $("cA").value.trim(), b = $("cB").value.trim(), p = $("cPista").value.trim(),
+      r = $("cResp").value.trim().toUpperCase(), k = $("cClave").value.trim();
+  if (!a || !b || !p || !k){ alert("Rellena concepto A, concepto B, la pista y la distinción."); return; }
+  if (r !== "A" && r !== "B"){ alert("En la respuesta escribe solo A o B."); return; }
+  var l = mios();
+  l.push({d:"mio", esc:p, ops:[a,b], ok: r==="A"?0:1, clave:k, contra:"Confundible añadido por ti."});
+  guardarMios(l); pintarMios();
+  ["cA","cB","cPista","cResp","cClave"].forEach(function(id){ $(id).value=""; });
+});
+
+/* ---------- Filtros ---------- */
+function pintarFiltros(){
+  var c = $("filtros");
+  c.innerHTML = Object.keys(DOMINIOS).map(function(k){
+    return '<button class="chip' + (seleccion[k]?" on":"") + '" data-d="' + k + '">' + esc(DOMINIOS[k]) + '</button>';
+  }).join("");
+  c.querySelectorAll(".chip").forEach(function(ch){
+    ch.addEventListener("click", function(){
+      var k = ch.dataset.d;
+      seleccion[k] = !seleccion[k];
+      ch.className = "chip" + (seleccion[k]?" on":"");
+    });
+  });
+}
+$("btnTodos").addEventListener("click", function(){
+  Object.keys(seleccion).forEach(function(k){ seleccion[k]=true; });
+  pintarFiltros();
+});
+
+/* ---------- Ronda ---------- */
+function barajar(a){
+  var r = a.slice();
+  for (var i=r.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r;
+}
+$("btnEmpezar").addEventListener("click", function(){
+  var pool = CATALOGO.filter(function(q){ return seleccion[q.d]; }).concat(mios());
+  if (!pool.length){ alert("Selecciona al menos un dominio."); return; }
+  ronda = barajar(pool); idx = 0; bien = 0; mal = 0; fallos = [];
+  $("config").style.display = "none";
+  $("resumen").style.display = "none";
+  $("zona").style.display = "block";
+  $("mTotal").textContent = ronda.length;
+  mostrar();
+  $("zona").scrollIntoView({behavior:"smooth", block:"start"});
+});
+$("btnSalir").addEventListener("click", terminar);
+$("btnSiguiente").addEventListener("click", function(){
+  idx++;
+  if (idx >= ronda.length) terminar(); else mostrar();
+});
+
+var enEspanol = false;   // solo afecta a la pregunta en pantalla
+var paresActuales = null;
+
+// Devuelve el texto de la pregunta en el idioma activo (si hay traducción)
+function txt(q){
+  if (enEspanol && q.es) return q.es;
+  return q;
+}
+
+function mostrar(){
+  respondida = false;
+  enEspanol = false;                    // cada pregunta arranca en inglés
+  var q = ronda[idx];
+  $("mNum").textContent = idx+1;
+  $("mBien").textContent = bien;
+  $("mMal").textContent = mal;
+  $("mBarra").style.width = Math.round((idx/ronda.length)*100) + "%";
+  $("domEt").textContent = q.d === "mio" ? "Tuyo" : DOMINIOS[q.d];
+  $("feedback").className = "feedback";
+  $("feedback").innerHTML = "";
+  $("btnSiguiente").style.display = "none";
+
+  // Barajamos las opciones para que la posición no delate la respuesta.
+  // Guardamos el índice original para poder mostrar su traducción.
+  var pares = q.ops.map(function(t,i){ return {orig:i, correcta: i===q.ok}; });
+  paresActuales = barajar(pares);
+  pintarPregunta(q);
+}
+
+function pintarPregunta(q){
+  var t = txt(q);
+  var hayTrad = !!q.es;
+  $("pista").innerHTML =
+    '<span class="escenario">' + (enEspanol ? "Escenario" : "Scenario") + '</span>' +
+    esc(t.esc) +
+    (hayTrad ? '<button class="btn-trad" id="btnTrad">' +
+       (enEspanol ? "↺ Back to English" : "🇪🇸 Ver en español") + '</button>' : '');
+
+  var cont = $("opciones");
+  cont.innerHTML = paresActuales.map(function(p,i){
+    return '<button class="opcion" data-i="' + i + '">' + esc(t.ops[p.orig]) + '</button>';
+  }).join("");
+
+  // Si ya se respondió, repintamos el estado de acierto/fallo
+  if (respondida){
+    var botones = cont.querySelectorAll(".opcion");
+    botones.forEach(function(b,i){
+      b.disabled = true;
+      if (paresActuales[i].correcta) b.className = "opcion acierto";
+      else if (i === ultimaElegida) b.className = "opcion fallo";
+    });
+    pintarFeedback(q, paresActuales[ultimaElegida].correcta);
+  } else {
+    cont.querySelectorAll(".opcion").forEach(function(btn, i){
+      btn.addEventListener("click", function(){ responder(paresActuales, i, q); });
+    });
+  }
+
+  if (hayTrad){
+    $("btnTrad").addEventListener("click", function(){
+      enEspanol = !enEspanol;
+      pintarPregunta(q);
+    });
+  }
+}
+
+var ultimaElegida = -1;
+
+function responder(pares, elegida, q){
+  if (respondida) return;
+  respondida = true;
+  ultimaElegida = elegida;
+  var acierto = pares[elegida].correcta;
+  var botones = $("opciones").querySelectorAll(".opcion");
+  botones.forEach(function(b, i){
+    b.disabled = true;
+    if (pares[i].correcta) b.className = "opcion acierto";
+    else if (i === elegida) b.className = "opcion fallo";
+  });
+  if (acierto){ bien++; }
+  else {
+    mal++;
+    var idxCorrecta = pares.filter(function(p){ return p.correcta; })[0].orig;
+    fallos.push({correcta: q.ops[idxCorrecta], clave: q.clave, claveEs: q.es ? q.es.clave : null});
+  }
+  $("mBien").textContent = bien;
+  $("mMal").textContent = mal;
+  pintarFeedback(q, acierto);
+  $("btnSiguiente").style.display = "inline-block";
+  $("btnSiguiente").textContent = (idx+1 >= ronda.length) ? "Ver resumen" : "Siguiente";
+}
+
+function pintarFeedback(q, acierto){
+  var t = txt(q);
+  var f = $("feedback");
+  f.className = "feedback " + (acierto ? "bien" : "mal");
+  f.innerHTML = "<h3>" +
+    (acierto ? (enEspanol ? "✓ Correcto" : "✓ Correct")
+             : (enEspanol ? "✕ No era esa" : "✕ Not that one")) + "</h3>" +
+    '<div class="clave">' + t.clave + "</div>" +
+    '<div class="contraste">' + t.contra + "</div>";
+}
+
+function terminar(){
+  $("zona").style.display = "none";
+  $("config").style.display = "block";
+  var total = bien + mal;
+  var pct = total ? Math.round((bien/total)*100) : 0;
+  var html = '<label class="tit">Resultado de la ronda</label>' +
+    '<div class="marcador"><span>Aciertos <b>' + bien + '</b></span>' +
+    '<span class="mal">Fallos <b>' + mal + '</b></span>' +
+    '<span>Acierto <b>' + pct + '%</b></span></div>' +
+    '<div class="barra"><i style="width:' + pct + '%"></i></div>';
+
+  if (fallos.length){
+    html += '<p style="font-size:.85rem;color:var(--tenue);margin-top:1rem;line-height:1.45">Repasa estos antes del examen:</p>';
+    fallos.forEach(function(f){
+      html += '<div class="fallo-item"><b>' + esc(f.correcta) + '</b> — ' + (f.claveEs || f.clave) + '</div>';
+    });
+  } else if (total) {
+    html += '<p style="font-size:.9rem;color:var(--verde);margin-top:1rem">Ronda limpia. Sube el número de dominios o añade tus propios confundibles.</p>';
+  }
+  $("resumen").innerHTML = html;
+  $("resumen").style.display = "block";
+  $("resumen").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ---------- Arranque ---------- */
+pintarFiltros();
+pintarMios();
+</script>
+</body>
+</html>
