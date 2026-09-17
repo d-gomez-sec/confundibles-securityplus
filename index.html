@@ -62,6 +62,7 @@
   .opcion:hover:not([disabled]){border-color:var(--verde)}
   .opcion.acierto{background:var(--verde-suave);border-color:var(--verde);color:var(--verde)}
   .opcion.fallo{background:var(--rojo-suave);border-color:var(--rojo);color:var(--rojo)}
+  .opcion.seleccionada{background:rgba(88,166,255,.1);border-color:var(--azul);color:var(--azul)}
   .opcion[disabled]{cursor:default}
 
   .feedback{display:none;margin-top:1rem;border-radius:10px;padding:.9rem 1rem;border:1px solid}
@@ -88,6 +89,53 @@
   .mio button{border:none;background:none;color:var(--violeta);cursor:pointer;font-size:.9rem;padding:0 .25rem}
 
   .aviso{display:flex;gap:.6rem;align-items:flex-start;background:var(--ambar-suave);border:1px solid var(--ambar);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;line-height:1.5;color:#e3b341;margin-top:1rem}
+
+  /* Selector de modo de estudio */
+  .modos{display:flex;gap:.5rem;flex-wrap:wrap}
+  .modo{flex:1;min-width:130px;background:#0d1117;color:var(--tenue);border:1px solid var(--linea);border-radius:10px;padding:.65rem .5rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--sans)}
+  .modo.activo{background:var(--verde-suave);color:var(--verde);border-color:var(--verde)}
+  .modo:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+  .pista-modo{font-size:.78rem;color:var(--tenue);margin-top:.6rem;line-height:1.45}
+
+  /* Reloj del examen */
+  #relojExamen{font-family:var(--mono);color:var(--ambar);font-weight:700}
+  #relojExamen.apurando{color:var(--rojo)}
+
+  /* Panel de estadísticas por dominio */
+  .stat-fila{margin-bottom:.7rem}
+  .stat-fila:last-child{margin-bottom:0}
+  .stat-cab{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.3rem}
+  .stat-cab .nom{color:var(--tinta);font-weight:600}
+  .stat-cab .num{font-family:var(--mono);color:var(--tenue)}
+  .stat-barra{height:8px;background:#21262d;border-radius:4px;overflow:hidden;position:relative}
+  .stat-barra i{display:block;height:100%;border-radius:4px}
+  .stat-due{font-size:.72rem;color:var(--ambar);margin-top:.2rem}
+  .stat-vacio{font-size:.83rem;color:var(--tenue)}
+
+  /* Chuleta de referencia (Dominio 5.3) */
+  .chuleta{display:grid;gap:.6rem}
+  .chu-item{background:#0d1117;border:1px solid var(--linea);border-radius:10px;padding:.7rem .9rem;font-size:.85rem;line-height:1.5}
+  .chu-item b{color:var(--verde);font-family:var(--mono);margin-right:.3rem}
+  .chu-item span{display:block;color:var(--tinta);margin-top:.2rem}
+
+  /* Modo Cálculo de riesgo (5.2) */
+  .oculto{display:none}
+  #zonaCalculo{display:none}
+  .calc-escenario{background:#0d1117;border:1px solid var(--linea);border-radius:10px;padding:1rem;font-size:.92rem;line-height:1.6;color:#e6edf3;margin:.9rem 0 1.2rem}
+  .calc-paso{margin-bottom:1.2rem}
+  .calc-paso label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--verde);margin-bottom:.4rem}
+  .calc-fila{display:flex;gap:.6rem;flex-wrap:wrap}
+  .calc-fila input{flex:1;min-width:140px;font-family:var(--mono);font-size:1rem;border:1px solid var(--linea);border-radius:9px;padding:.6rem .75rem;background:#0d1117;color:var(--tinta)}
+  .calc-fila input:focus{outline:2px solid var(--verde)}
+  .calc-fila input:disabled{opacity:.6}
+  .calc-fb{margin-top:.6rem;border-radius:10px;padding:.7rem .9rem;font-size:.88rem;line-height:1.5;display:none}
+  .calc-fb.bien{display:block;background:var(--verde-suave);border:1px solid var(--verde);color:var(--verde)}
+  .calc-fb.mal{display:block;background:var(--rojo-suave);border:1px solid var(--rojo);color:var(--rojo)}
+  .calc-fb .formula{font-family:var(--mono);color:var(--tinta);margin-top:.35rem;display:block}
+  .calc-resumen{background:#0d1117;border:1px solid var(--linea);border-radius:10px;padding:.9rem 1rem;margin-top:.3rem;font-size:.85rem;line-height:1.7;color:var(--tinta)}
+  .calc-resumen b{color:var(--verde)}
+  .calc-progreso{font-family:var(--mono);font-size:.78rem;color:var(--tenue);margin-top:.9rem;text-align:center}
+
   footer{margin-top:1.8rem;font-size:.76rem;color:var(--tenue);text-align:center;line-height:1.6}
   footer code{font-family:var(--mono);color:var(--verde)}
 </style>
@@ -95,12 +143,36 @@
 <body>
 <div class="contenedor">
   <header>
-    <h1>Confundibles</h1>
-    <p>Los pares que CompTIA usa para hacerte dudar en el SY0-701. No es un simulador de examen: ataca solo donde se falla, la distinción que decide la respuesta.</p>
+    <h1>Estudio Security+</h1>
+    <p>Herramienta de refuerzo para el SY0-701: los pares y tríos que CompTIA usa para hacerte dudar, con repetición espaciada y modo examen. No sustituye el temario: ataca donde se falla.</p>
   </header>
 
+  <div class="panel" id="paneStats" style="display:none">
+    <label class="tit">Tu progreso</label>
+    <div id="statsBarras"></div>
+  </div>
+
   <div class="panel" id="config">
-    <label class="tit">Dominios a practicar</label>
+    <label class="tit">Modo de estudio</label>
+    <div class="modos" id="modos">
+      <button class="modo activo" data-modo="libre">🔀 Ronda libre</button>
+      <button class="modo" data-modo="repaso">🔁 Repaso inteligente</button>
+      <button class="modo" data-modo="examen">⏱ Examen simulado</button>
+      <button class="modo" data-modo="calculo">🧮 Cálculo (5.2)</button>
+    </div>
+    <p class="pista-modo" id="pistaModo">Preguntas al azar de los dominios que elijas. Sin memoria entre sesiones.</p>
+
+    <div id="bloqueExamen" style="display:none">
+      <label class="tit" style="margin-top:1rem">¿Cuántas preguntas?</label>
+      <div class="filtros" id="cantidadExamen">
+        <button class="chip" data-n="15">15</button>
+        <button class="chip on" data-n="30">30</button>
+        <button class="chip" data-n="50">50</button>
+      </div>
+      <p class="pista-modo">Sin corrección hasta el final. 60 segundos por pregunta, como colchón — el examen real da más tiempo por PBQ, esto es orientativo.</p>
+    </div>
+
+    <label class="tit" style="margin-top:1.1rem">Dominios a practicar</label>
     <div class="filtros" id="filtros"></div>
     <div class="botones">
       <button class="btn-pri" id="btnEmpezar">Empezar ronda</button>
@@ -112,8 +184,9 @@
   <div class="panel" id="zona">
     <div class="marcador">
       <span>Pregunta <b id="mNum">1</b> / <span id="mTotal">0</span></span>
-      <span>Aciertos <b id="mBien">0</b></span>
-      <span class="mal">Fallos <b id="mMal">0</b></span>
+      <span id="marcadorAciertos">Aciertos <b id="mBien">0</b></span>
+      <span class="mal" id="marcadorFallos">Fallos <b id="mMal">0</b></span>
+      <span id="relojExamen" style="display:none">⏱ <b id="mReloj">--:--</b></span>
     </div>
     <div class="barra"><i id="mBarra"></i></div>
 
@@ -129,7 +202,61 @@
     </div>
   </div>
 
+  <div class="panel" id="zonaCalculo">
+    <span class="dominio-et">5.2 · Análisis cuantitativo de riesgo</span>
+    <div class="calc-escenario" id="calcEscenario"></div>
+
+    <div class="calc-paso" id="pasoSLE">
+      <label for="inSLE">Paso 1 · Calcula el SLE (Single Loss Expectancy)</label>
+      <div class="calc-fila">
+        <input type="text" id="inSLE" placeholder="AV × EF" inputmode="decimal" autocomplete="off">
+        <button class="btn-pri" id="btnCompSLE">Comprobar</button>
+      </div>
+      <div class="calc-fb" id="fbSLE"></div>
+    </div>
+
+    <div class="calc-paso oculto" id="pasoALE">
+      <label for="inALE">Paso 2 · Con ese SLE, calcula el ALE (Annualized Loss Expectancy)</label>
+      <div class="calc-fila">
+        <input type="text" id="inALE" placeholder="SLE × ARO" inputmode="decimal" autocomplete="off">
+        <button class="btn-pri" id="btnCompALE">Comprobar</button>
+      </div>
+      <div class="calc-fb" id="fbALE"></div>
+    </div>
+
+    <div class="calc-paso oculto" id="pasoDecision">
+      <label>Paso 3 · ¿Compensa la inversión?</label>
+      <p id="decisionTexto" style="font-size:.88rem;color:var(--tinta);margin-bottom:.6rem"></p>
+      <div class="botones">
+        <button class="btn-sec" id="btnDecisionSi">Sí, compensa</button>
+        <button class="btn-sec" id="btnDecisionNo">No compensa</button>
+      </div>
+      <div class="calc-fb" id="fbDecision"></div>
+    </div>
+
+    <div class="calc-resumen oculto" id="calcResumen"></div>
+
+    <div class="botones" style="margin-top:1rem">
+      <button class="btn-pri" id="btnOtroCalc">Otro ejercicio</button>
+      <button class="btn-sec" id="btnSalirCalc">Volver</button>
+    </div>
+    <div class="calc-progreso" id="calcProgreso"></div>
+  </div>
+
   <div class="panel" id="resumen"></div>
+
+  <div class="panel">
+    <label class="tit">Chuleta · Tipos de acuerdo (5.3)</label>
+    <p style="font-size:.83rem;color:var(--tenue);margin-bottom:.8rem">Consulta rápida antes de practicar el ejercicio de arriba.</p>
+    <div class="chuleta">
+      <div class="chu-item"><b>SLA</b> — Service Level Agreement<span>Nivel de servicio esperado: tiempos de respuesta, % de disponibilidad garantizado, con penalizaciones.</span></div>
+      <div class="chu-item"><b>MOU</b> — Memorandum of Understanding<span>Acuerdo de intención mutua, informal, normalmente no vinculante legalmente.</span></div>
+      <div class="chu-item"><b>MSA</b> — Master Service Agreement<span>Contrato marco que rige toda la relación futura, para no renegociar los términos generales cada vez.</span></div>
+      <div class="chu-item"><b>NDA</b> — Non-Disclosure Agreement<span>Acuerdo de confidencialidad: obliga a no compartir información sensible.</span></div>
+      <div class="chu-item"><b>BPA</b> — Business Partnership Agreement<span>Términos entre socios de negocio: responsabilidades, reparto de beneficios y pérdidas.</span></div>
+      <div class="chu-item"><b>SOW / WO</b> — Statement of Work / Work Order<span>Alcance concreto de un proyecto específico: qué, cuándo, por cuánto.</span></div>
+    </div>
+  </div>
 
   <div class="panel">
     <label class="tit">Añade tus propios confundibles</label>
@@ -590,13 +717,412 @@ var CATALOGO = [
    es:{esc:"Documento que define qué se puede y no se puede hacer con los equipos de la empresa.",
        ops:["AUP","SLA"],
        clave:"<b>AUP</b> = Acceptable Use Policy: uso aceptable de los recursos.",
-       contra:"<b>SLA</b> es un acuerdo de <b>nivel de servicio</b> con un proveedor (disponibilidad comprometida)."}}
+       contra:"<b>SLA</b> es un acuerdo de <b>nivel de servicio</b> con un proveedor (disponibilidad comprometida)."}},
+
+  // ---------- Domain 2 ampliado ----------
+  {d:"d2",
+   esc:"An attacker sends forged frames that force a client to fully leave the wireless network and start a new connection from scratch.",
+   ops:["Deauthentication attack","Disassociation attack"], ok:0,
+   clave:"<b>Deauthentication</b> forces a full disconnection: the client must reauthenticate and reassociate from zero.",
+   contra:"<b>Disassociation</b> only breaks the association with that access point; the client can often reconnect without a full new handshake, and it's commonly used to bump a client toward a rogue AP.",
+   es:{esc:"Un atacante envía tramas falsificadas que obligan a un cliente a abandonar por completo la red inalámbrica y empezar una conexión nueva desde cero.",
+       ops:["Ataque de desautenticación","Ataque de desasociación"],
+       clave:"<b>Desautenticación</b> fuerza una desconexión completa: el cliente debe autenticarse y asociarse de nuevo desde cero.",
+       contra:"<b>Desasociación</b> solo rompe la asociación con ese punto de acceso; el cliente suele poder reconectar sin un proceso completo nuevo, y se usa para empujarlo hacia un AP falso."}},
+
+  {d:"d2",
+   esc:"An attacker manipulates a web form's input to run arbitrary operating system commands on the server.",
+   ops:["SQL Injection","Command Injection","LDAP Injection"], ok:1,
+   clave:"If the payload ends up executed by the <b>operating system shell</b>, it's Command Injection.",
+   contra:"SQL Injection targets a <b>database</b>; LDAP Injection targets queries against a <b>directory service</b> (like Active Directory). Same idea — untrusted input reaching an interpreter — different target.",
+   es:{esc:"Un atacante manipula la entrada de un formulario web para ejecutar comandos arbitrarios del sistema operativo en el servidor.",
+       ops:["Inyección SQL","Inyección de comandos","Inyección LDAP"],
+       clave:"Si la carga acaba ejecutándose en el <b>shell del sistema operativo</b>, es inyección de comandos.",
+       contra:"La inyección SQL ataca una <b>base de datos</b>; la LDAP, consultas a un <b>servicio de directorio</b> (como Active Directory). Misma idea —entrada no confiable llegando a un intérprete— distinto objetivo."}},
+
+  {d:"d2",
+   esc:"An attacker builds a fabricated scenario — posing as IT support investigating an incident — to get an employee to reveal their password over the phone.",
+   ops:["Pretexting","Generic phishing"], ok:0,
+   clave:"<b>Pretexting</b> is built around a fabricated, believable scenario (a false identity and story) used to justify the request.",
+   contra:"Generic <b>phishing</b> relies on volume and a familiar template (a fake login page, a bulk email); it doesn't need a tailored backstory.",
+   es:{esc:"Un atacante construye una historia inventada —haciéndose pasar por soporte técnico investigando un incidente— para que un empleado revele su contraseña por teléfono.",
+       ops:["Pretexting","Phishing genérico"],
+       clave:"<b>Pretexting</b> se construye alrededor de una historia fabricada y creíble (una identidad y un relato falsos) que justifica la petición.",
+       contra:"El <b>phishing</b> genérico se apoya en el volumen y una plantilla conocida (una página de login falsa, un correo masivo); no necesita una historia a medida."}},
+
+  {d:"d2",
+   esc:"An attacker registers \"amaz0n.com\", betting that users will mistype the real domain.",
+   ops:["Typosquatting","Homograph attack"], ok:0,
+   clave:"<b>Typosquatting</b> banks on a genuine typing mistake — a missing or swapped character a user might actually type.",
+   contra:"A <b>homograph attack</b> uses characters that look identical (a Cyrillic 'а' instead of a Latin 'a') so the domain looks correct even under close inspection — no typo needed.",
+   es:{esc:"Un atacante registra «amaz0n.com», apostando a que los usuarios escribirán mal el dominio real.",
+       ops:["Typosquatting","Ataque homógrafo"],
+       clave:"<b>Typosquatting</b> apuesta por un error de escritura genuino — un carácter que falta o está cambiado que el usuario realmente podría teclear.",
+       contra:"Un <b>ataque homógrafo</b> usa caracteres visualmente idénticos (una «а» cirílica en vez de una «a» latina), así que el dominio parece correcto incluso mirándolo de cerca — sin necesidad de errata."}},
+
+  // ---------- Tríos de conceptos generales (Dominio 1) ----------
+  {d:"d1",
+   esc:"The likelihood that a threat actor exploits a specific weakness, combined with the impact if it happens.",
+   ops:["Vulnerability","Threat","Risk"], ok:2,
+   clave:"<b>Risk</b> = likelihood × impact. It's the combination, not either piece alone.",
+   contra:"A <b>vulnerability</b> is just the weakness on its own; a <b>threat</b> is the actor or event that could exploit it. Neither one alone is risk.",
+   es:{esc:"La probabilidad de que un actor de amenaza explote una debilidad concreta, combinada con el impacto si ocurre.",
+       ops:["Vulnerabilidad","Amenaza","Riesgo"],
+       clave:"<b>Riesgo</b> = probabilidad × impacto. Es la combinación, no una pieza sola.",
+       contra:"Una <b>vulnerabilidad</b> es solo la debilidad en sí; una <b>amenaza</b> es el agente o evento que podría explotarla. Ninguna de las dos por separado es riesgo."}},
+
+  {d:"d1",
+   esc:"After an incident, you restore a system from a clean backup to return it to normal operation.",
+   ops:["Preventive control","Detective control","Corrective control"], ok:2,
+   clave:"A <b>corrective</b> control acts <b>after</b> the fact to fix or limit the damage already done.",
+   contra:"<b>Preventive</b> controls stop the incident before it happens (a firewall rule); <b>detective</b> controls notice it while or after it happens (a SIEM alert), but don't fix anything by themselves.",
+   es:{esc:"Tras un incidente, restauras un sistema desde una copia de seguridad limpia para devolverlo a su funcionamiento normal.",
+       ops:["Control preventivo","Control detective","Control correctivo"],
+       clave:"Un control <b>correctivo</b> actúa <b>después</b> de los hechos para arreglar o limitar el daño ya producido.",
+       contra:"Los <b>preventivos</b> frenan el incidente antes de que ocurra (una regla de firewall); los <b>detectives</b> lo notan mientras o después (una alerta del SIEM), pero no arreglan nada por sí solos."}},
+
+  {d:"d1",
+   esc:"An attacker doesn't steal or alter any data — they just flood the server so legitimate users can't reach it.",
+   ops:["Confidentiality","Integrity","Availability"], ok:2,
+   clave:"Denying access to legitimate users, without touching the data itself, attacks <b>availability</b>.",
+   contra:"<b>Confidentiality</b> is violated when data is read by someone unauthorized; <b>integrity</b>, when data is changed without authorization. Here neither happens — the data is untouched, just unreachable.",
+   es:{esc:"Un atacante no roba ni altera ningún dato — simplemente satura el servidor para que los usuarios legítimos no puedan acceder.",
+       ops:["Confidencialidad","Integridad","Disponibilidad"],
+       clave:"Negar el acceso a usuarios legítimos, sin tocar los datos en sí, ataca la <b>disponibilidad</b>.",
+       contra:"La <b>confidencialidad</b> se viola cuando alguien no autorizado lee los datos; la <b>integridad</b>, cuando se modifican sin autorización. Aquí no pasa ninguna — los datos están intactos, solo inaccesibles."}},
+
+  // ---------- Terminología nueva del SY0-701 (Dominio 3) ----------
+  {d:"d3",
+   esc:"A cloud-delivered platform that bundles SD-WAN with security functions (SWG, CASB, ZTNA, firewall) into a single service, so branch traffic is inspected before it reaches the internet.",
+   ops:["SD-WAN","SASE"], ok:1,
+   clave:"<b>SASE</b> (Secure Access Service Edge) is the broader concept: networking <b>plus</b> security, delivered from the cloud.",
+   contra:"<b>SD-WAN</b> is only the networking piece — smart routing of traffic across multiple links. SASE = SD-WAN + a stack of security services on top.",
+   es:{esc:"Una plataforma entregada desde la nube que combina SD-WAN con funciones de seguridad (SWG, CASB, ZTNA, firewall) en un solo servicio, de forma que el tráfico de una sucursal se inspecciona antes de llegar a internet.",
+       ops:["SD-WAN","SASE"],
+       clave:"<b>SASE</b> (Secure Access Service Edge) es el concepto más amplio: red <b>más</b> seguridad, entregado desde la nube.",
+       contra:"<b>SD-WAN</b> es solo la pieza de red — enrutamiento inteligente del tráfico entre varios enlaces. SASE = SD-WAN + una capa de servicios de seguridad encima."}},
+
+  {d:"d3",
+   esc:"The industrial control system that manages a water treatment plant, where availability and physical safety matter more than patching quickly.",
+   ops:["IoT (Internet of Things)","OT (Operational Technology)","ICS (Industrial Control System)"], ok:2,
+   clave:"An <b>ICS</b> is the specific control system running the plant's physical process (PLCs, SCADA).",
+   contra:"<b>OT</b> is the broader category — any technology managing physical processes and equipment, ICS included. <b>IoT</b> is consumer/general-purpose connected devices (a smart thermostat), a different world with different risk priorities.",
+   es:{esc:"El sistema de control industrial que gestiona una planta de tratamiento de agua, donde la disponibilidad y la seguridad física importan más que parchear rápido.",
+       ops:["IoT (Internet de las Cosas)","OT (Tecnología Operacional)","ICS (Sistema de Control Industrial)"],
+       clave:"Un <b>ICS</b> es el sistema de control concreto que hace funcionar el proceso físico de la planta (PLCs, SCADA).",
+       contra:"<b>OT</b> es la categoría más amplia — cualquier tecnología que gestiona procesos y equipos físicos, ICS incluido. <b>IoT</b> son dispositivos conectados de consumo o uso general (un termostato inteligente), otro mundo con otras prioridades de riesgo."}},
+
+  // ---------- Dominio 5.3 · Agreement Types ----------
+  // Ejercicio práctico: las 6 opciones aparecen siempre juntas, como en el examen real.
+  {d:"d5",
+   esc:"A contract with your cloud provider guarantees 99.9% uptime and defines penalties if response times exceed the agreed threshold.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:0,
+   clave:"<b>SLA</b> (Service Level Agreement): defines the expected level of service — response times, guaranteed uptime percentage. Remember the 'nines' from Resiliency (3.4).",
+   contra:"None of the other five define measurable service performance with penalties — that's specifically what an SLA is for.",
+   es:{esc:"Un contrato con tu proveedor de nube garantiza un 99,9% de disponibilidad y define penalizaciones si los tiempos de respuesta superan el umbral acordado.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>SLA</b> (Service Level Agreement): define el nivel de servicio esperado — tiempos de respuesta, porcentaje de disponibilidad garantizado. Recuerda los «nueves» de Resiliency (3.4).",
+       contra:"Ninguno de los otros cinco define un rendimiento de servicio medible con penalizaciones — para eso existe específicamente el SLA."}},
+
+  {d:"d5",
+   esc:"Two universities sign a short document expressing their intent to collaborate on a research project. It carries no real legal weight.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:1,
+   clave:"<b>MOU</b> (Memorandum of Understanding): a mutual statement of intent, usually not legally binding. It says 'we want to work together on this' without the weight of a full contract.",
+   contra:"An MSA or SOW would be legally binding and detailed; an MOU is deliberately informal — that informality is the giveaway.",
+   es:{esc:"Dos universidades firman un documento breve expresando su intención de colaborar en un proyecto de investigación. No tiene peso legal real.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>MOU</b> (Memorandum of Understanding): una declaración mutua de intenciones, normalmente no vinculante legalmente. Dice «queremos colaborar en esto» sin el peso de un contrato completo.",
+       contra:"Un MSA o un SOW serían vinculantes y detallados; un MOU es deliberadamente informal — esa informalidad es la pista."}},
+
+  {d:"d5",
+   esc:"Before starting any projects together, two companies sign a document establishing the general terms — payment terms, liability, dispute resolution — that will govern every future project between them.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:2,
+   clave:"<b>MSA</b> (Master Service Agreement): the umbrella contract that governs the whole future relationship, so the general terms don't need renegotiating every time a new project comes up.",
+   contra:"An SOW defines one specific project — an MSA is what lets you skip re-negotiating the basics for every SOW that follows.",
+   es:{esc:"Antes de empezar ningún proyecto juntas, dos empresas firman un documento que establece los términos generales —pago, responsabilidad, resolución de conflictos— que regirán todos los proyectos futuros entre ellas.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>MSA</b> (Master Service Agreement): el contrato marco que rige toda la relación futura, para no tener que renegociar los términos generales cada vez que surge un proyecto nuevo.",
+       contra:"Un SOW define un proyecto concreto — el MSA es lo que permite no renegociar lo básico en cada SOW que venga después."}},
+
+  {d:"d5",
+   esc:"Before sharing its proprietary source code with a contractor, a company has them sign a document obligating them not to disclose it to anyone.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:3,
+   clave:"<b>NDA</b> (Non-Disclosure Agreement): the confidentiality agreement — obligates the signer not to share sensitive information exchanged during the collaboration.",
+   contra:"This is purely about confidentiality, not service levels, intent, or scope — the other five don't focus specifically on secrecy.",
+   es:{esc:"Antes de compartir su código fuente propietario con un contratista, una empresa le hace firmar un documento que le obliga a no divulgarlo a nadie.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>NDA</b> (Non-Disclosure Agreement): el acuerdo de confidencialidad — obliga a no compartir información sensible intercambiada durante la colaboración.",
+       contra:"Esto trata solo de confidencialidad, no de niveles de servicio, intención o alcance — los otros cinco no se centran específicamente en el secreto."}},
+
+  {d:"d5",
+   esc:"Two companies launching a joint venture sign a document defining each partner's responsibilities and how profits and losses will be split.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:4,
+   clave:"<b>BPA</b> (Business Partnership Agreement): defines the terms between business partners — responsibilities, and how profit and loss are shared.",
+   contra:"This is about a partnership structure and shared financial outcome, specific to a BPA — not a vendor relationship (MSA/SLA) or a single project (SOW).",
+   es:{esc:"Dos empresas que lanzan una empresa conjunta firman un documento que define la responsabilidad de cada socio y cómo se repartirán beneficios y pérdidas.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>BPA</b> (Business Partnership Agreement): define los términos entre socios de negocio — responsabilidades y reparto de beneficios y pérdidas.",
+       contra:"Esto trata de una estructura de sociedad y un resultado financiero compartido, específico de un BPA — no de una relación con proveedor (MSA/SLA) ni de un proyecto único (SOW)."}},
+
+  {d:"d5",
+   esc:"Under an existing master agreement, a vendor and client define exactly what will be delivered for this one project, by when, and for how much.",
+   ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"], ok:5,
+   clave:"<b>SOW/WO</b> (Statement of Work / Work Order): defines the concrete scope of one specific project within an existing relationship — what exactly will be done, in what timeframe, for what price.",
+   contra:"This is scoped to a single project 'under an existing agreement' — that's the SOW's job; the MSA already set the general terms.",
+   es:{esc:"Bajo un acuerdo marco ya existente, un proveedor y un cliente definen exactamente qué se entregará en este proyecto concreto, para cuándo y por cuánto.",
+       ops:["SLA","MOU","MSA","NDA","BPA","SOW/WO"],
+       clave:"<b>SOW/WO</b> (Statement of Work / Work Order): define el alcance concreto de un proyecto específico dentro de una relación ya existente — qué se va a hacer exactamente, en qué plazo, por cuánto.",
+       contra:"Esto está acotado a un proyecto único «bajo un acuerdo existente» — ese es el trabajo del SOW; el MSA ya fijó los términos generales."}},
+
+  // ---------- Dominio 5.2 · Análisis de riesgo (complemento al modo de cálculo) ----------
+  {d:"d5",
+   esc:"The security team rates this risk as 'High' based on their collective experience, without assigning it a dollar figure.",
+   ops:["Qualitative risk analysis","Quantitative risk analysis"], ok:0,
+   clave:"<b>Qualitative</b> analysis uses subjective categories — low/medium/high — based on expert judgment. Fast, but imprecise.",
+   contra:"<b>Quantitative</b> analysis assigns real numbers, typically in money (AV, SLE, ALE), so it can be compared directly against the cost of a control.",
+   es:{esc:"El equipo de seguridad califica este riesgo como «Alto» basándose en su experiencia colectiva, sin asignarle una cifra económica.",
+       ops:["Análisis cualitativo de riesgo","Análisis cuantitativo de riesgo"],
+       clave:"El análisis <b>cualitativo</b> usa categorías subjetivas — bajo/medio/alto — basadas en juicio experto. Rápido, pero impreciso.",
+       contra:"El análisis <b>cuantitativo</b> asigna números reales, normalmente en dinero (AV, SLE, ALE), así que se puede comparar directamente con el coste de un control."}},
+
+  {d:"d5",
+   esc:"Which formula correctly calculates the Annualized Loss Expectancy?",
+   ops:["AV × EF","SLE × ARO","AV × ARO"], ok:1,
+   clave:"<b>ALE = SLE × ARO</b>: annualizas la pérdida que ya calculaste por incidente.",
+   contra:"<b>AV × EF</b> te da el SLE, un paso antes — todavía sin anualizar. <b>AV × ARO</b> se salta el EF por completo y mezcla los términos equivocados.",
+   es:{esc:"¿Qué fórmula calcula correctamente el ALE (Annualized Loss Expectancy)?",
+       ops:["AV × EF","SLE × ARO","AV × ARO"],
+       clave:"<b>ALE = SLE × ARO</b>: anualizas la pérdida que ya calculaste por incidente.",
+       contra:"<b>AV × EF</b> te da el SLE, un paso antes — todavía sin anualizar. <b>AV × ARO</b> se salta el EF por completo y mezcla los términos equivocados."}},
+
+  // ---------- Dominio 2 · Actores de amenaza ----------
+  {d:"d2",
+   esc:"A well-funded group runs a long-term espionage campaign against a defense contractor to steal weapons blueprints, showing no interest in quick financial gain.",
+   ops:["Nation-state actor","Organized crime"], ok:0,
+   clave:"<b>Nation-state</b> actors are government-backed, highly resourced, and motivated by espionage, sabotage, or geopolitical advantage — not quick profit.",
+   contra:"<b>Organized crime</b> is financially motivated above all: ransomware, fraud, selling stolen data. If the goal is money, think organized crime, not nation-state.",
+   es:{esc:"Un grupo bien financiado ejecuta una campaña de espionaje a largo plazo contra una contratista de defensa para robar planos de armamento, sin ningún interés en beneficio económico rápido.",
+       ops:["Actor de estado-nación","Crimen organizado"],
+       clave:"Un <b>actor de estado-nación</b> está respaldado por un gobierno, muy bien dotado de recursos, y motivado por espionaje, sabotaje o ventaja geopolítica — no por beneficio rápido.",
+       contra:"El <b>crimen organizado</b> está motivado sobre todo por el dinero: ransomware, fraude, venta de datos robados. Si el objetivo es económico, piensa en crimen organizado, no en estado-nación."}},
+
+  {d:"d2",
+   esc:"An activist group defaces a company's website and leaks internal emails to protest its environmental record.",
+   ops:["Hacktivist","Insider threat"], ok:0,
+   clave:"A <b>hacktivist</b> is driven by an ideological or political cause, typically attacking from the outside to make a public statement.",
+   contra:"An <b>insider threat</b> comes from someone who already has authorized access — an employee or contractor — whether acting maliciously or just carelessly.",
+   es:{esc:"Un grupo activista desfigura la web de una empresa y filtra correos internos para protestar por su historial medioambiental.",
+       ops:["Hacktivista","Amenaza interna (insider)"],
+       clave:"Un <b>hacktivista</b> actúa por una causa ideológica o política, normalmente atacando desde fuera para hacer una declaración pública.",
+       contra:"Una <b>amenaza interna</b> viene de alguien que ya tiene acceso autorizado —un empleado o contratista—, sea por malicia o por simple descuido."}},
+
+  {d:"d2",
+   esc:"Someone downloads a ready-made hacking tool from a forum and runs it against random targets, without understanding how it actually works.",
+   ops:["Unskilled attacker (script kiddie)","Nation-state actor"], ok:0,
+   clave:"An <b>unskilled attacker</b> uses existing tools without deep technical knowledge — low sophistication, often random, untargeted victims.",
+   contra:"A <b>nation-state</b> actor sits at the opposite extreme: custom tools, deep expertise, patient and precisely targeted — the highest tier of sophistication and resources.",
+   es:{esc:"Alguien descarga una herramienta de hacking ya hecha desde un foro y la lanza contra objetivos al azar, sin entender realmente cómo funciona.",
+       ops:["Atacante sin habilidad (script kiddie)","Actor de estado-nación"],
+       clave:"Un <b>atacante sin habilidad</b> usa herramientas ya hechas sin conocimiento técnico profundo — baja sofisticación, víctimas a menudo aleatorias.",
+       contra:"Un <b>actor de estado-nación</b> es el extremo opuesto: herramientas a medida, experiencia profunda, paciente y dirigido con precisión — el nivel más alto de sofisticación y recursos."}},
+
+  // ---------- Dominio 2 · Taxonomía de malware ----------
+  {d:"d2",
+   esc:"Malware encrypts every file on the victim's drive and displays a message demanding payment in cryptocurrency to restore access.",
+   ops:["Ransomware","Generic Trojan"], ok:0,
+   clave:"<b>Ransomware</b> specifically encrypts (or threatens to leak) data and demands payment — that extortion element is what defines it.",
+   contra:"A generic <b>Trojan</b> just disguises itself as legitimate software to gain access; it doesn't necessarily encrypt anything or demand payment. Ransomware is often delivered <i>via</i> a trojan, but they're not the same thing.",
+   es:{esc:"Un malware cifra todos los archivos del disco de la víctima y muestra un mensaje exigiendo pago en criptomoneda para restaurar el acceso.",
+       ops:["Ransomware","Troyano genérico"],
+       clave:"El <b>ransomware</b> cifra los datos (o amenaza con filtrarlos) y exige un pago — ese elemento de extorsión es lo que lo define.",
+       contra:"Un <b>troyano</b> genérico solo se disfraza de software legítimo para conseguir acceso; no necesariamente cifra nada ni exige pago. El ransomware a menudo se entrega <i>a través de</i> un troyano, pero no son lo mismo."}},
+
+  {d:"d2",
+   esc:"Malware embeds itself at the operating system's kernel level, hiding its own files and processes from antivirus scans and even from the OS itself.",
+   ops:["Rootkit","Trojan"], ok:0,
+   clave:"A <b>rootkit</b> operates at a deep, privileged level (kernel or below) specifically to hide itself and keep stealthy, persistent access.",
+   contra:"A <b>Trojan</b> is about the disguise used to get in — looking like legitimate software. A rootkit is about what happens after: staying invisible once inside.",
+   es:{esc:"Un malware se incrusta en el núcleo (kernel) del sistema operativo, ocultando sus propios archivos y procesos de los antivirus e incluso del propio sistema.",
+       ops:["Rootkit","Troyano"],
+       clave:"Un <b>rootkit</b> opera en un nivel profundo y privilegiado (kernel o inferior) específicamente para ocultarse y mantener acceso persistente y sigiloso.",
+       contra:"Un <b>troyano</b> trata del disfraz usado para entrar —parecer software legítimo—. El rootkit trata de lo que pasa después: permanecer invisible una vez dentro."}},
+
+  {d:"d2",
+   esc:"Malware silently records every key the user types, including passwords, and sends the log to the attacker.",
+   ops:["Keylogger","Spyware"], ok:0,
+   clave:"A <b>keylogger</b> does one specific thing: capture keystrokes. It's a narrow, specialized tool.",
+   contra:"<b>Spyware</b> is the broader category — any software that secretly monitors the user (browsing habits, screenshots, location...). A keylogger is a type of spyware focused only on typed input.",
+   es:{esc:"Un malware registra en silencio cada tecla que pulsa el usuario, incluidas contraseñas, y envía el registro al atacante.",
+       ops:["Keylogger","Spyware"],
+       clave:"Un <b>keylogger</b> hace una cosa concreta: capturar pulsaciones de teclado. Es una herramienta estrecha y especializada.",
+       contra:"El <b>spyware</b> es la categoría más amplia — cualquier software que vigila al usuario en secreto (hábitos de navegación, capturas de pantalla, ubicación...). Un keylogger es un tipo de spyware centrado solo en lo que se teclea."}},
+
+  {d:"d2",
+   esc:"A disgruntled system administrator plants code that stays completely dormant until a specific date — the day after their planned termination — when it deletes the entire payroll database.",
+   ops:["Logic bomb","Trojan"], ok:0,
+   clave:"A <b>logic bomb</b> lies dormant until a specific trigger condition (a date, an event, an action) is met. Time or condition is the key word.",
+   contra:"A <b>Trojan</b> is about disguise to gain initial access; it doesn't inherently wait for a trigger. A logic bomb can be planted by an insider who already has legitimate access — no disguise needed.",
+   es:{esc:"Un administrador de sistemas descontento planta un código que permanece completamente inactivo hasta una fecha concreta —el día después de su despido previsto— momento en el que borra toda la base de datos de nóminas.",
+       ops:["Bomba lógica","Troyano"],
+       clave:"Una <b>bomba lógica</b> permanece inactiva hasta que se cumple una condición concreta (una fecha, un evento, una acción). El tiempo o la condición es la palabra clave.",
+       contra:"Un <b>troyano</b> trata del disfraz para conseguir acceso inicial; no espera necesariamente a una condición. Una bomba lógica puede plantarla alguien con acceso legítimo ya concedido — sin necesidad de disfraz."}},
+
+  {d:"d2",
+   esc:"Thousands of compromised devices, spread across the world, are remotely commanded all at once to flood a single website with traffic.",
+   ops:["Botnet","Worm"], ok:0,
+   clave:"A <b>botnet</b> is about command and control: a network of infected devices (bots) that an attacker directs remotely, often to launch a DDoS attack.",
+   contra:"A <b>worm</b> is about how the infection spreads — self-propagating with no user action. A worm can be the thing that <i>builds</i> a botnet, but the botnet itself is the resulting network under remote control.",
+   es:{esc:"Miles de dispositivos comprometidos, repartidos por todo el mundo, reciben la orden remota de saturar a la vez con tráfico un único sitio web.",
+       ops:["Botnet","Gusano"],
+       clave:"Una <b>botnet</b> trata del mando y control: una red de dispositivos infectados (bots) que un atacante dirige a distancia, a menudo para lanzar un ataque DDoS.",
+       contra:"Un <b>gusano</b> trata de cómo se propaga la infección —por sí solo, sin acción del usuario—. Un gusano puede ser lo que <i>construye</i> una botnet, pero la botnet en sí es la red resultante bajo control remoto."}},
+
+  // ---------- Dominio 4 · Forense e IR ----------
+  {d:"d4",
+   esc:"Before collecting evidence, the response team makes sure they capture RAM contents before the hard drive, because RAM data disappears the moment the machine is powered off.",
+   ops:["Chain of custody","Order of volatility","Legal hold"], ok:1,
+   clave:"<b>Order of volatility</b>: the sequence for collecting evidence from most to least perishable — RAM before disk, disk before backups.",
+   contra:"<b>Chain of custody</b> is the unbroken documentation trail of who handled evidence and when, proving it wasn't tampered with. A <b>legal hold</b> is a notice that obligates preserving data because litigation is anticipated — it stops normal deletion, but says nothing about the order of collecting it.",
+   es:{esc:"Antes de recopilar pruebas, el equipo de respuesta se asegura de capturar el contenido de la RAM antes que el disco duro, porque los datos en RAM desaparecen en cuanto se apaga el equipo.",
+       ops:["Cadena de custodia","Orden de volatilidad","Retención legal (legal hold)"],
+       clave:"<b>Orden de volatilidad</b>: la secuencia para recopilar pruebas de lo más perecedero a lo menos — RAM antes que disco, disco antes que copias de seguridad.",
+       contra:"La <b>cadena de custodia</b> es el registro documental ininterrumpido de quién manejó la prueba y cuándo, demostrando que no se manipuló. Una <b>retención legal</b> es un aviso que obliga a conservar datos porque se prevé un litigio — detiene el borrado normal, pero no dice nada sobre el orden de recolección."}},
+
+  {d:"d4",
+   esc:"An administrator checks out elevated privileges for exactly 30 minutes to perform a specific maintenance task, and the system automatically revokes them afterward.",
+   ops:["PAM (Privileged Access Management)","RBAC (Role-Based Access Control)"], ok:0,
+   clave:"<b>PAM</b> manages privileged accounts specifically — often with just-in-time elevation, checkout/checkin, and session recording, precisely because those accounts are the highest-value target.",
+   contra:"<b>RBAC</b> just assigns permissions based on a static job role; it doesn't inherently add time limits or extra oversight to privileged access the way PAM does.",
+   es:{esc:"Un administrador solicita privilegios elevados durante exactamente 30 minutos para realizar una tarea de mantenimiento concreta, y el sistema se los revoca automáticamente después.",
+       ops:["PAM (Gestión de Acceso Privilegiado)","RBAC (Control de Acceso por Roles)"],
+       clave:"<b>PAM</b> gestiona específicamente las cuentas privilegiadas — a menudo con elevación justo a tiempo, entrada/salida controlada y grabación de sesión, precisamente porque esas cuentas son el objetivo de más valor.",
+       contra:"<b>RBAC</b> solo asigna permisos según un rol de trabajo estático; no añade por sí mismo límites de tiempo ni supervisión extra al acceso privilegiado como sí hace PAM."}},
+
+  {d:"d4",
+   esc:"The company owns the device and chose the model, but the employee got to pick which model from a short approved list before it was issued to them.",
+   ops:["BYOD (Bring Your Own Device)","COPE (Corporate-Owned, Personally Enabled)","CYOD (Choose Your Own Device)"], ok:2,
+   clave:"<b>CYOD</b>: la empresa lo posee, pero el empleado <b>elige</b> de un catálogo aprobado antes de que se lo asignen.",
+   contra:"En <b>BYOD</b> el empleado es dueño del dispositivo desde el principio. En <b>COPE</b> la empresa lo posee y elige el modelo — el empleado no elige, solo obtiene derecho a uso personal además del laboral.",
+   es:{esc:"La empresa es dueña del dispositivo y eligió el modelo, pero el empleado pudo elegir qué modelo dentro de una lista aprobada corta antes de que se lo entregaran.",
+       ops:["BYOD (trae tu propio dispositivo)","COPE (propiedad corporativa, uso personal habilitado)","CYOD (elige tu dispositivo)"],
+       clave:"<b>CYOD</b>: la empresa lo posee, pero el empleado <b>elige</b> de un catálogo aprobado antes de que se lo asignen.",
+       contra:"En <b>BYOD</b> el empleado es dueño del dispositivo desde el principio. En <b>COPE</b> la empresa lo posee y elige el modelo — el empleado no elige, solo obtiene derecho a uso personal además del laboral."}},
+
+  {d:"d4",
+   esc:"Before a laptop is allowed onto the corporate network, it's checked for an up-to-date antivirus and OS patches; if it fails, it's placed in a quarantine VLAN instead.",
+   ops:["NAC (Network Access Control)","802.1X"], ok:0,
+   clave:"<b>NAC</b> is the broader policy: evaluating a device's <b>posture</b> (patches, antivirus, compliance) before granting network access.",
+   contra:"<b>802.1X</b> is the specific port-based authentication <b>protocol</b> often used to implement NAC — it's the mechanism, not the policy itself.",
+   es:{esc:"Antes de que un portátil pueda entrar en la red corporativa, se comprueba que tenga el antivirus y los parches del sistema al día; si falla, se le coloca en una VLAN de cuarentena.",
+       ops:["NAC (Control de Acceso a la Red)","802.1X"],
+       clave:"<b>NAC</b> es la política más amplia: evaluar la <b>postura</b> de un dispositivo (parches, antivirus, cumplimiento) antes de darle acceso a la red.",
+       contra:"<b>802.1X</b> es el <b>protocolo</b> específico de autenticación basado en puerto que a menudo se usa para implementar NAC — es el mecanismo, no la política en sí."}},
+
+  // ---------- Dominio 3 · Arquitectura ----------
+  {d:"d3",
+   esc:"When the firewall crashes, all network traffic is allowed through unfiltered so the business doesn't lose connectivity.",
+   ops:["Fail-open","Fail-closed"], ok:0,
+   clave:"<b>Fail-open</b>: on failure, access is allowed by default. Prioritizes availability over security.",
+   contra:"<b>Fail-closed</b> (fail-secure) does the opposite: on failure, access is denied by default. Prioritizes security over availability — right for a door lock, wrong for a link you can't afford to lose.",
+   es:{esc:"Cuando el firewall falla, se permite pasar todo el tráfico de red sin filtrar para que el negocio no pierda conectividad.",
+       ops:["Fail-open (falla abierto)","Fail-closed (falla cerrado)"],
+       clave:"<b>Fail-open</b>: al fallar, el acceso se permite por defecto. Prioriza la disponibilidad sobre la seguridad.",
+       contra:"<b>Fail-closed</b> (fail-secure) hace lo contrario: al fallar, el acceso se deniega por defecto. Prioriza la seguridad sobre la disponibilidad — correcto para una cerradura, incorrecto para un enlace que no te puedes permitir perder."}},
+
+  {d:"d3",
+   esc:"Data sitting encrypted on a laptop's hard drive, not currently being read or transmitted anywhere.",
+   ops:["Data at rest","Data in transit","Data in use"], ok:0,
+   clave:"<b>Data at rest</b>: datos almacenados, sin moverse. Se protege típicamente con cifrado de disco o de base de datos.",
+   contra:"<b>Data in transit</b> se mueve por una red (se protege con TLS/VPN). <b>Data in use</b> se está procesando activamente en memoria (lo más difícil de proteger — requiere cosas como enclaves seguros).",
+   es:{esc:"Datos guardados y cifrados en el disco duro de un portátil, que ahora mismo no se están leyendo ni transmitiendo a ningún sitio.",
+       ops:["Datos en reposo","Datos en tránsito","Datos en uso"],
+       clave:"<b>Datos en reposo</b>: datos almacenados, sin moverse. Se protegen típicamente con cifrado de disco o de base de datos.",
+       contra:"Los <b>datos en tránsito</b> se mueven por una red (se protegen con TLS/VPN). Los <b>datos en uso</b> se están procesando activamente en memoria (lo más difícil de proteger — requiere cosas como enclaves seguros)."}},
+
+  {d:"d3",
+   esc:"A payment system replaces a customer's real credit card number with a randomly generated value that has no mathematical relationship to the original; the real number is stored separately in a secure vault and can only be retrieved by looking it up there.",
+   ops:["Tokenization","Data masking","Obfuscation","Encryption"], ok:0,
+   clave:"<b>Tokenization</b>: el valor sustituto <b>no tiene relación matemática</b> con el original — es solo una referencia a un almacén seguro, no algo que se revierta con una clave.",
+   contra:"El <b>cifrado</b> es reversible con una clave, usando matemáticas. El <b>enmascaramiento</b> suele ocultar parte del dato para mostrarlo (solo los últimos 4 dígitos), sin un almacén separado. La <b>ofuscación</b> es el término general para dificultar que se entienda un dato — la tokenización, el enmascaramiento y el cifrado son formas concretas de hacerlo.",
+   es:{esc:"Un sistema de pago sustituye el número real de la tarjeta de un cliente por un valor generado al azar sin relación matemática con el original; el número real se guarda aparte en un almacén seguro y solo se puede recuperar consultándolo allí.",
+       ops:["Tokenización","Enmascaramiento de datos","Ofuscación","Cifrado"],
+       clave:"La <b>tokenización</b>: el valor sustituto <b>no tiene relación matemática</b> con el original — es solo una referencia a un almacén seguro, no algo que se revierta con una clave.",
+       contra:"El <b>cifrado</b> es reversible con una clave, usando matemáticas. El <b>enmascaramiento</b> suele ocultar parte del dato para mostrarlo (solo los últimos 4 dígitos), sin un almacén separado. La <b>ofuscación</b> es el término general para dificultar que se entienda un dato — la tokenización, el enmascaramiento y el cifrado son formas concretas de hacerlo."}},
+
+  // ---------- Dominio 1 · Conceptos generales ----------
+  {d:"d1",
+   esc:"The component that evaluates policy and decides whether a request should be trusted — checking identity, device posture, and context before granting access.",
+   ops:["Control plane","Data plane"], ok:0,
+   clave:"The <b>control plane</b> makes the trust decision: the policy engine, adjudicating who/what/context.",
+   contra:"The <b>data plane</b> (forwarding plane) is where the approved traffic actually flows once the control plane says yes — it enforces the decision, it doesn't make it.",
+   es:{esc:"El componente que evalúa la política y decide si una petición debe confiarse — comprobando identidad, postura del dispositivo y contexto antes de dar acceso.",
+       ops:["Plano de control","Plano de datos"],
+       clave:"El <b>plano de control</b> toma la decisión de confianza: el motor de políticas, quién/qué/contexto.",
+       contra:"El <b>plano de datos</b> (plano de reenvío) es por donde circula el tráfico ya aprobado una vez que el plano de control dice que sí — aplica la decisión, no la toma."}},
+
+  {d:"d1",
+   esc:"A single decoy database record — a fake customer entry that should never legitimately be accessed — is planted so that any query touching it immediately triggers an alert.",
+   ops:["Honeypot","Honeynet","Honeyfile","Honeytoken"], ok:3,
+   clave:"Un <b>honeytoken</b> es un dato señuelo (un registro falso, una credencial, una clave de API) — no un sistema entero — cuyo uso es en sí mismo la alerta.",
+   contra:"Un <b>honeypot</b> es un sistema señuelo completo. Una <b>honeynet</b> es una red señuelo entera formada por varios honeypots. Un <b>honeyfile</b> es un archivo señuelo pensado para parecer atractivo. Los cuatro funcionan igual —nadie legítimo debería tocarlos— pero difieren en qué es el cebo: un sistema, una red, un archivo o un dato.",
+   es:{esc:"Se planta un único registro señuelo en una base de datos —una ficha de cliente falsa que nunca debería consultarse de forma legítima— para que cualquier consulta que la toque dispare una alerta al instante.",
+       ops:["Honeypot","Honeynet","Honeyfile","Honeytoken"],
+       clave:"Un <b>honeytoken</b> es un dato señuelo (un registro falso, una credencial, una clave de API) — no un sistema entero — cuyo uso es en sí mismo la alerta.",
+       contra:"Un <b>honeypot</b> es un sistema señuelo completo. Una <b>honeynet</b> es una red señuelo entera formada por varios honeypots. Un <b>honeyfile</b> es un archivo señuelo pensado para parecer atractivo. Los cuatro funcionan igual —nadie legítimo debería tocarlos— pero difieren en qué es el cebo: un sistema, una red, un archivo o un dato."}},
+
+  // ---------- Dominio 5 · Riesgo y cumplimiento ----------
+  {d:"d5",
+   esc:"The board publishes a strategic statement: 'we are willing to accept a moderate level of risk in pursuit of aggressive growth.' It's a broad declaration, not tied to any single metric.",
+   ops:["Risk appetite","Risk tolerance"], ok:0,
+   clave:"<b>Risk appetite</b> is the broad, strategic amount of risk an organization is willing to accept in pursuit of its objectives — set at the top, in general terms.",
+   contra:"<b>Risk tolerance</b> is narrower and more specific: the acceptable deviation around one particular risk or metric (e.g. 'up to 4 hours of downtime a year is tolerable'). Appetite is the philosophy; tolerance is the specific boundary.",
+   es:{esc:"El consejo publica una declaración estratégica: «estamos dispuestos a aceptar un nivel moderado de riesgo en busca de un crecimiento agresivo». Es una declaración amplia, no ligada a ninguna métrica concreta.",
+       ops:["Apetito de riesgo","Tolerancia al riesgo"],
+       clave:"El <b>apetito de riesgo</b> es la cantidad amplia y estratégica de riesgo que una organización está dispuesta a aceptar en busca de sus objetivos — se fija arriba, en términos generales.",
+       contra:"La <b>tolerancia al riesgo</b> es más estrecha y concreta: la desviación aceptable alrededor de un riesgo o métrica en particular (p. ej. «hasta 4 horas de caída al año son tolerables»). El apetito es la filosofía; la tolerancia es el límite concreto."}},
+
+  {d:"d5",
+   esc:"A marketing company is hired by a retailer to send promotional emails on its behalf, using the retailer's customer list, strictly following the retailer's instructions about how that data may be used.",
+   ops:["Data owner","Data controller","Data processor","Data custodian"], ok:2,
+   clave:"Un <b>data processor</b> (encargado del tratamiento) maneja datos <b>por cuenta de</b> y <b>bajo las instrucciones de</b> otra parte — no decide para qué ni cómo se usan, solo ejecuta.",
+   contra:"El <b>data controller</b> (responsable del tratamiento, aquí el comercio) decide los fines y los medios del tratamiento. El <b>data owner</b> responde por un conjunto de datos concreto dentro de la organización (suele ser un rol de negocio, no un tercero). El <b>data custodian</b> se ocupa de la custodia técnica del día a día (copias de seguridad, controles de acceso), no de la responsabilidad legal.",
+   es:{esc:"Una empresa de marketing es contratada por un comercio para enviar correos promocionales en su nombre, usando la lista de clientes del comercio, siguiendo estrictamente sus instrucciones sobre cómo se pueden usar esos datos.",
+       ops:["Data owner (propietario)","Data controller (responsable)","Data processor (encargado)","Data custodian (custodio)"],
+       clave:"Un <b>data processor</b> (encargado del tratamiento) maneja datos <b>por cuenta de</b> y <b>bajo las instrucciones de</b> otra parte — no decide para qué ni cómo se usan, solo ejecuta.",
+       contra:"El <b>data controller</b> (responsable, aquí el comercio) decide los fines y los medios del tratamiento. El <b>data owner</b> responde por un conjunto de datos concreto dentro de la organización (suele ser un rol de negocio, no un tercero). El <b>data custodian</b> se ocupa de la custodia técnica del día a día (copias de seguridad, controles de acceso), no de la responsabilidad legal."}},
+
+  {d:"d5",
+   esc:"The testing team is given full documentation, network diagrams, and even source code access before starting the engagement, to simulate an attacker with complete internal knowledge.",
+   ops:["Known environment (white box)","Unknown environment (black box)","Partially known environment (gray box)"], ok:0,
+   clave:"<b>Known environment</b> (white box): los testers arrancan con información completa — lo contrario de simular a un atacante externo desde cero.",
+   contra:"<b>Unknown environment</b> (black box) no da nada de antemano, simulando a un atacante externo real. <b>Partially known</b> (gray box) queda en medio: algo de información, como las credenciales de un usuario normal, pero no todo.",
+   es:{esc:"Al equipo de pruebas se le entrega documentación completa, diagramas de red e incluso acceso al código fuente antes de empezar, para simular a un atacante con conocimiento interno total.",
+       ops:["Entorno conocido (caja blanca)","Entorno desconocido (caja negra)","Entorno parcialmente conocido (caja gris)"],
+       clave:"<b>Entorno conocido</b> (caja blanca): el equipo arranca con información completa — lo contrario de simular a un atacante externo desde cero.",
+       contra:"<b>Entorno desconocido</b> (caja negra) no da nada de antemano, simulando a un atacante externo real. <b>Parcialmente conocido</b> (caja gris) queda en medio: algo de información, como las credenciales de un usuario normal, pero no todo."}}
 ];
+
+/* ---------- Identidad estable de cada pregunta (para repetición espaciada) ---------- */
+function idDe(q){
+  var s = (q.d||"") + "|" + q.esc + "|" + q.ops.join(",");
+  var h = 5381;
+  for (var i=0;i<s.length;i++){ h = ((h*33) ^ s.charCodeAt(i)) >>> 0; }
+  return "q" + h.toString(36);
+}
 
 /* ---------- Estado ---------- */
 var CLAVE_MIOS = "confundibles_mios_v1";
+var CLAVE_STATS = "confundibles_stats_v1";
 var seleccion = {d1:true,d2:true,d3:true,d4:true,d5:true};
+var MODO_ESTUDIO = "libre";      // libre | repaso | examen
+var CANT_EXAMEN = 30;
 var ronda = [], idx = 0, bien = 0, mal = 0, fallos = [], respondida = false;
+var respuestasExamen = [];
+var timerInterval = null, segundosRestantes = 0;
+var tiempoPreguntaInicio = 0;
+var ultimaElegida = -1, ultimoElapsed = null;
+var enEspanol = false;
+var paresActuales = null;
 
 /* ---------- Confundibles propios ---------- */
 function mios(){ try { return JSON.parse(localStorage.getItem(CLAVE_MIOS)) || []; } catch(e){ return []; } }
@@ -624,6 +1150,50 @@ $("btnAdd").addEventListener("click", function(){
   ["cA","cB","cPista","cResp","cClave"].forEach(function(id){ $(id).value=""; });
 });
 
+/* ---------- Repetición espaciada (Leitner simplificado) ---------- */
+var INTERVALOS_DIAS = [0, 1, 3, 7, 16];   // caja 0 = vence ya; caja 4 = repasado cada ~16 días
+function leerStats(){ try { return JSON.parse(localStorage.getItem(CLAVE_STATS)) || {}; } catch(e){ return {}; } }
+function guardarStats(s){ try { localStorage.setItem(CLAVE_STATS, JSON.stringify(s)); } catch(e){} }
+function registrarResultado(qid, dominio, acierto){
+  var s = leerStats();
+  var e = s[qid] || {caja:0, vence:0, vistas:0, aciertos:0, d:dominio};
+  e.d = dominio; e.vistas++;
+  if (acierto){ e.aciertos++; e.caja = Math.min(e.caja+1, INTERVALOS_DIAS.length-1); }
+  else { e.caja = 0; }
+  e.vence = Date.now() + INTERVALOS_DIAS[e.caja]*24*60*60*1000;
+  s[qid] = e;
+  guardarStats(s);
+}
+function statsPorDominio(){
+  var s = leerStats(), agg = {}, ahora = Date.now();
+  Object.keys(DOMINIOS).forEach(function(k){ agg[k] = {vistas:0, aciertos:0, due:0}; });
+  Object.keys(s).forEach(function(qid){
+    var e = s[qid], dom = e.d;
+    if (!agg[dom]) agg[dom] = {vistas:0, aciertos:0, due:0};
+    agg[dom].vistas += e.vistas; agg[dom].aciertos += e.aciertos;
+    if (e.vence <= ahora) agg[dom].due++;
+  });
+  return agg;
+}
+function pintarStats(){
+  var agg = statsPorDominio();
+  var huboAlgo = Object.keys(agg).some(function(k){ return agg[k].vistas>0; });
+  if (!huboAlgo){ $("paneStats").style.display = "none"; return; }
+  $("paneStats").style.display = "block";
+  var html = "";
+  Object.keys(DOMINIOS).forEach(function(k){
+    var a = agg[k] || {vistas:0,aciertos:0,due:0};
+    var pct = a.vistas ? Math.round((a.aciertos/a.vistas)*100) : null;
+    var color = pct===null ? "var(--tenue)" : pct>=80 ? "var(--verde)" : pct>=55 ? "var(--ambar)" : "var(--rojo)";
+    html += '<div class="stat-fila"><div class="stat-cab"><span class="nom">'+esc(DOMINIOS[k])+'</span>'+
+      '<span class="num">'+(pct===null?"sin datos":pct+"% · "+a.vistas+" vistas")+'</span></div>'+
+      '<div class="stat-barra"><i style="width:'+(pct||0)+'%;background:'+color+'"></i></div>'+
+      (a.due>0 ? '<div class="stat-due">'+a.due+' pendientes de repaso</div>' : '')+
+      '</div>';
+  });
+  $("statsBarras").innerHTML = html;
+}
+
 /* ---------- Filtros ---------- */
 function pintarFiltros(){
   var c = $("filtros");
@@ -643,16 +1213,105 @@ $("btnTodos").addEventListener("click", function(){
   pintarFiltros();
 });
 
-/* ---------- Ronda ---------- */
+/* ---------- Selector de modo de estudio ---------- */
+var TEXTOS_MODO = {
+  libre:  "Preguntas al azar de los dominios que elijas. Sin memoria entre sesiones.",
+  repaso: "Prioriza lo que fallaste o hace tiempo que no repasas, dentro de los dominios elegidos. Si no hay nada pendiente, rellena con preguntas al azar.",
+  examen: "Sin corrección hasta el final, con tiempo limitado, y usando todos los dominios: ignora el filtro de abajo, como el examen real.",
+  calculo:"Ejercicios de cálculo generados al vuelo, con valores distintos cada vez: SLE, ALE, y si compensa invertir. Necesitarás una calculadora."
+};
+document.querySelectorAll(".modo").forEach(function(b){
+  b.addEventListener("click", function(){
+    MODO_ESTUDIO = b.dataset.modo;
+    document.querySelectorAll(".modo").forEach(function(x){ x.className = "modo"+(x===b?" activo":""); });
+    $("bloqueExamen").style.display = (MODO_ESTUDIO==="examen") ? "block" : "none";
+    $("pistaModo").textContent = TEXTOS_MODO[MODO_ESTUDIO];
+    var filtrosIrrelevantes = (MODO_ESTUDIO==="examen" || MODO_ESTUDIO==="calculo");
+    $("filtros").style.opacity = filtrosIrrelevantes ? "0.4" : "1";
+    $("filtros").style.pointerEvents = filtrosIrrelevantes ? "none" : "auto";
+    $("btnEmpezar").textContent = (MODO_ESTUDIO==="calculo") ? "Generar ejercicio" : "Empezar ronda";
+  });
+});
+document.querySelectorAll("#cantidadExamen .chip").forEach(function(b){
+  b.addEventListener("click", function(){
+    CANT_EXAMEN = +b.dataset.n;
+    document.querySelectorAll("#cantidadExamen .chip").forEach(function(x){ x.className="chip"+(x===b?" on":""); });
+  });
+});
+
+/* ---------- Reloj del examen ---------- */
+function iniciarReloj(segundos){
+  segundosRestantes = segundos;
+  $("relojExamen").style.display = "inline";
+  $("marcadorAciertos").style.display = "none";   // sin corrección visible durante el examen
+  $("marcadorFallos").style.display = "none";
+  actualizarReloj();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    segundosRestantes--;
+    actualizarReloj();
+    if (segundosRestantes <= 0){ clearInterval(timerInterval); terminarExamenPorTiempo(); }
+  }, 1000);
+}
+function actualizarReloj(){
+  var m = Math.floor(segundosRestantes/60), s = segundosRestantes%60;
+  $("mReloj").textContent = (m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+  $("relojExamen").className = segundosRestantes <= 60 ? "apurando" : "";
+}
+function ocultarReloj(){
+  clearInterval(timerInterval);
+  $("relojExamen").style.display = "none";
+  $("marcadorAciertos").style.display = "inline";
+  $("marcadorFallos").style.display = "inline";
+}
+
+/* ---------- Construir y empezar la ronda ---------- */
 function barajar(a){
   var r = a.slice();
   for (var i=r.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=r[i]; r[i]=r[j]; r[j]=t; }
   return r;
 }
 $("btnEmpezar").addEventListener("click", function(){
+  if (MODO_ESTUDIO === "calculo"){
+    $("config").style.display = "none";
+    $("resumen").style.display = "none";
+    $("zona").style.display = "none";
+    nuevoEjercicioCalculo();
+    $("zonaCalculo").style.display = "block";
+    $("zonaCalculo").scrollIntoView({behavior:"smooth", block:"start"});
+    return;
+  }
+
   var pool = CATALOGO.filter(function(q){ return seleccion[q.d]; }).concat(mios());
   if (!pool.length){ alert("Selecciona al menos un dominio."); return; }
-  ronda = barajar(pool); idx = 0; bien = 0; mal = 0; fallos = [];
+
+  fallos = []; bien = 0; mal = 0; idx = 0; respuestasExamen = [];
+
+  if (MODO_ESTUDIO === "examen"){
+    var poolExamen = CATALOGO.concat(mios());               // el examen mezcla todos los dominios
+    ronda = barajar(poolExamen).slice(0, Math.min(CANT_EXAMEN, poolExamen.length));
+    iniciarReloj(ronda.length * 60);
+  } else if (MODO_ESTUDIO === "repaso"){
+    var ahora = Date.now(), stats = leerStats();
+    var conDue = pool.map(function(q){
+      var e = stats[idDe(q)];
+      return {q:q, vence: e ? e.vence : 0};
+    });
+    var pendientes = conDue.filter(function(x){ return x.vence <= ahora; });
+    pendientes.sort(function(a,b){ return a.vence - b.vence; });   // lo más atrasado, primero
+    var elegidos = pendientes.slice(0, 20).map(function(x){ return x.q; });
+    if (elegidos.length < 8){
+      var resto = barajar(pool.filter(function(q){ return elegidos.indexOf(q)===-1; }));
+      elegidos = elegidos.concat(resto.slice(0, 8 - elegidos.length));
+    }
+    if (!elegidos.length){ alert("No hay nada pendiente de repaso en estos dominios todavía. Prueba con Ronda libre."); return; }
+    ronda = barajar(elegidos);
+    ocultarReloj();
+  } else {
+    ronda = barajar(pool);
+    ocultarReloj();
+  }
+
   $("config").style.display = "none";
   $("resumen").style.display = "none";
   $("zona").style.display = "block";
@@ -660,24 +1319,27 @@ $("btnEmpezar").addEventListener("click", function(){
   mostrar();
   $("zona").scrollIntoView({behavior:"smooth", block:"start"});
 });
-$("btnSalir").addEventListener("click", terminar);
+
+$("btnSalir").addEventListener("click", function(){
+  if (MODO_ESTUDIO === "examen") corregirExamenParcial(); else terminar();
+});
 $("btnSiguiente").addEventListener("click", function(){
   idx++;
-  if (idx >= ronda.length) terminar(); else mostrar();
+  if (idx >= ronda.length){
+    if (MODO_ESTUDIO === "examen") corregirExamen(); else terminar();
+  } else {
+    mostrar();
+  }
 });
 
-var enEspanol = false;   // solo afecta a la pregunta en pantalla
-var paresActuales = null;
+/* ---------- Idioma por pregunta ---------- */
+function txt(q){ return (enEspanol && q.es) ? q.es : q; }
 
-// Devuelve el texto de la pregunta en el idioma activo (si hay traducción)
-function txt(q){
-  if (enEspanol && q.es) return q.es;
-  return q;
-}
-
+/* ---------- Mostrar y responder ---------- */
 function mostrar(){
   respondida = false;
-  enEspanol = false;                    // cada pregunta arranca en inglés
+  enEspanol = false;
+  tiempoPreguntaInicio = Date.now();
   var q = ronda[idx];
   $("mNum").textContent = idx+1;
   $("mBien").textContent = bien;
@@ -688,8 +1350,6 @@ function mostrar(){
   $("feedback").innerHTML = "";
   $("btnSiguiente").style.display = "none";
 
-  // Barajamos las opciones para que la posición no delate la respuesta.
-  // Guardamos el índice original para poder mostrar su traducción.
   var pares = q.ops.map(function(t,i){ return {orig:i, correcta: i===q.ok}; });
   paresActuales = barajar(pares);
   pintarPregunta(q);
@@ -709,15 +1369,18 @@ function pintarPregunta(q){
     return '<button class="opcion" data-i="' + i + '">' + esc(t.ops[p.orig]) + '</button>';
   }).join("");
 
-  // Si ya se respondió, repintamos el estado de acierto/fallo
   if (respondida){
     var botones = cont.querySelectorAll(".opcion");
-    botones.forEach(function(b,i){
-      b.disabled = true;
-      if (paresActuales[i].correcta) b.className = "opcion acierto";
-      else if (i === ultimaElegida) b.className = "opcion fallo";
-    });
-    pintarFeedback(q, paresActuales[ultimaElegida].correcta);
+    if (MODO_ESTUDIO === "examen"){
+      botones.forEach(function(b,i){ b.disabled = true; if (i===ultimaElegida) b.className = "opcion seleccionada"; });
+    } else {
+      botones.forEach(function(b,i){
+        b.disabled = true;
+        if (paresActuales[i].correcta) b.className = "opcion acierto";
+        else if (i === ultimaElegida) b.className = "opcion fallo";
+      });
+      pintarFeedback(q, paresActuales[ultimaElegida].correcta, ultimoElapsed);
+    }
   } else {
     cont.querySelectorAll(".opcion").forEach(function(btn, i){
       btn.addEventListener("click", function(){ responder(paresActuales, i, q); });
@@ -732,19 +1395,31 @@ function pintarPregunta(q){
   }
 }
 
-var ultimaElegida = -1;
-
 function responder(pares, elegida, q){
   if (respondida) return;
   respondida = true;
   ultimaElegida = elegida;
+  ultimoElapsed = Date.now() - tiempoPreguntaInicio;
   var acierto = pares[elegida].correcta;
+  var qid = idDe(q);
+
+  if (MODO_ESTUDIO === "examen"){
+    // Sin feedback: se guarda la respuesta y se corrige todo al final.
+    var botonesEx = $("opciones").querySelectorAll(".opcion");
+    botonesEx.forEach(function(b,i){ b.disabled = true; if (i===elegida) b.className = "opcion seleccionada"; });
+    respuestasExamen.push({qid:qid, dominio:q.d, q:q, elegidaOrig: pares[elegida].orig, correcta: acierto});
+    $("btnSiguiente").style.display = "inline-block";
+    $("btnSiguiente").textContent = (idx+1 >= ronda.length) ? "Finalizar y corregir" : "Siguiente";
+    return;
+  }
+
   var botones = $("opciones").querySelectorAll(".opcion");
   botones.forEach(function(b, i){
     b.disabled = true;
     if (pares[i].correcta) b.className = "opcion acierto";
     else if (i === elegida) b.className = "opcion fallo";
   });
+  registrarResultado(qid, q.d, acierto);
   if (acierto){ bien++; }
   else {
     mal++;
@@ -753,23 +1428,32 @@ function responder(pares, elegida, q){
   }
   $("mBien").textContent = bien;
   $("mMal").textContent = mal;
-  pintarFeedback(q, acierto);
+  pintarFeedback(q, acierto, ultimoElapsed);
   $("btnSiguiente").style.display = "inline-block";
   $("btnSiguiente").textContent = (idx+1 >= ronda.length) ? "Ver resumen" : "Siguiente";
 }
 
-function pintarFeedback(q, acierto){
+function pintarFeedback(q, acierto, elapsedMs){
   var t = txt(q);
   var f = $("feedback");
   f.className = "feedback " + (acierto ? "bien" : "mal");
-  f.innerHTML = "<h3>" +
-    (acierto ? (enEspanol ? "✓ Correcto" : "✓ Correct")
-             : (enEspanol ? "✕ No era esa" : "✕ Not that one")) + "</h3>" +
+  var titulo;
+  if (acierto){
+    var rapido = (elapsedMs !== null && elapsedMs < 6000);
+    titulo = enEspanol
+      ? (rapido ? "✓ Correcto, y rápido" : "✓ Correcto (te lo has pensado)")
+      : (rapido ? "✓ Correct, and fast" : "✓ Correct (you took your time)");
+  } else {
+    titulo = enEspanol ? "✕ No era esa" : "✕ Not that one";
+  }
+  f.innerHTML = "<h3>" + titulo + "</h3>" +
     '<div class="clave">' + t.clave + "</div>" +
     '<div class="contraste">' + t.contra + "</div>";
 }
 
+/* ---------- Cierre de ronda: libre y repaso ---------- */
 function terminar(){
+  ocultarReloj();
   $("zona").style.display = "none";
   $("config").style.display = "block";
   var total = bien + mal;
@@ -786,12 +1470,246 @@ function terminar(){
       html += '<div class="fallo-item"><b>' + esc(f.correcta) + '</b> — ' + (f.claveEs || f.clave) + '</div>';
     });
   } else if (total) {
-    html += '<p style="font-size:.9rem;color:var(--verde);margin-top:1rem">Ronda limpia. Sube el número de dominios o añade tus propios confundibles.</p>';
+    html += '<p style="font-size:.9rem;color:var(--verde);margin-top:1rem">Ronda limpia. Prueba el modo examen, sube el número de dominios, o añade tus propios confundibles.</p>';
   }
   $("resumen").innerHTML = html;
   $("resumen").style.display = "block";
+  pintarStats();
   $("resumen").scrollIntoView({behavior:"smooth", block:"start"});
 }
+
+/* ---------- Cierre del examen simulado ---------- */
+function terminarExamenPorTiempo(){
+  clearInterval(timerInterval);
+  if (!respondida){
+    var q = ronda[idx];
+    respuestasExamen.push({qid:idDe(q), dominio:q.d, q:q, elegidaOrig:-1, correcta:false, sinResponder:true});
+  }
+  for (var j=idx+1; j<ronda.length; j++){
+    var qr = ronda[j];
+    respuestasExamen.push({qid:idDe(qr), dominio:qr.d, q:qr, elegidaOrig:-1, correcta:false, sinResponder:true});
+  }
+  corregirExamen();
+}
+
+function filaRevision(r, i){
+  var q = r.q, correctaTxt = q.ops[q.ok];
+  var tuTxt = r.sinResponder ? "(sin responder)" : q.ops[r.elegidaOrig];
+  return '<div class="fallo-item" style="border-left-color:' + (r.correcta?"var(--verde)":"var(--rojo)") + '">' +
+    '<b>' + (i+1) + '. ' + esc(correctaTxt) + '</b>' +
+    (r.correcta ? '' : ' — tu respuesta: ' + esc(tuTxt)) +
+    '<div style="margin-top:.3rem;font-weight:400">' + q.clave + '</div></div>';
+}
+
+function corregirExamen(){
+  ocultarReloj();
+  $("zona").style.display = "none";
+  $("config").style.display = "block";
+  var total = respuestasExamen.length, aciertos = 0;
+  respuestasExamen.forEach(function(r){ registrarResultado(r.qid, r.dominio, r.correcta); if (r.correcta) aciertos++; });
+  var pct = total ? Math.round((aciertos/total)*100) : 0;
+
+  var html = '<label class="tit">Resultado del examen simulado</label>' +
+    '<div class="marcador"><span>Aciertos <b>' + aciertos + '</b></span>' +
+    '<span class="mal">Fallos <b>' + (total-aciertos) + '</b></span>' +
+    '<span>Acierto <b>' + pct + '%</b></span></div>' +
+    '<div class="barra"><i style="width:' + pct + '%"></i></div>' +
+    '<p style="font-size:.78rem;color:var(--tenue);margin-top:.6rem;line-height:1.4">Orientativo: CompTIA puntúa en una escala propia (100–900, apto desde 750) que no se puede reproducir aquí. Este porcentaje es solo sobre estas preguntas.</p>' +
+    '<p style="font-size:.85rem;color:var(--tenue);margin-top:1.1rem">Repaso pregunta a pregunta:</p>';
+  respuestasExamen.forEach(function(r, i){ html += filaRevision(r, i); });
+
+  $("resumen").innerHTML = html;
+  $("resumen").style.display = "block";
+  pintarStats();
+  $("resumen").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function corregirExamenParcial(){
+  ocultarReloj();
+  $("zona").style.display = "none";
+  $("config").style.display = "block";
+  var total = respuestasExamen.length;
+  if (!total){ $("resumen").style.display = "none"; return; }
+  var aciertos = 0;
+  respuestasExamen.forEach(function(r){ registrarResultado(r.qid, r.dominio, r.correcta); if (r.correcta) aciertos++; });
+  var pct = Math.round((aciertos/total)*100);
+  var html = '<label class="tit">Examen interrumpido</label>' +
+    '<p style="font-size:.83rem;color:var(--tenue);margin-bottom:.6rem">Corregidas las ' + total + ' preguntas que llegaste a responder.</p>' +
+    '<div class="marcador"><span>Aciertos <b>' + aciertos + '</b></span>' +
+    '<span class="mal">Fallos <b>' + (total-aciertos) + '</b></span>' +
+    '<span>Acierto <b>' + pct + '%</b></span></div>' +
+    '<div class="barra"><i style="width:' + pct + '%"></i></div>';
+  respuestasExamen.forEach(function(r, i){ html += filaRevision(r, i); });
+  $("resumen").innerHTML = html;
+  $("resumen").style.display = "block";
+  pintarStats();
+  $("resumen").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ============================================================
+   MODO CÁLCULO · Dominio 5.2, Análisis cuantitativo de riesgo
+   Genera ejercicios con valores aleatorios: no hay catálogo fijo,
+   se improvisan AV/EF/ARO nuevos cada vez y se piden SLE y ALE.
+   ============================================================ */
+var CLAVE_CALC = "confundibles_calc_v1";
+var calcActual = null;
+
+function leerCalcStats(){
+  try { return JSON.parse(localStorage.getItem(CLAVE_CALC)) || {sleI:0,sleA:0,aleI:0,aleA:0,decI:0,decA:0}; }
+  catch(e){ return {sleI:0,sleA:0,aleI:0,aleA:0,decI:0,decA:0}; }
+}
+function guardarCalcStats(s){ try { localStorage.setItem(CLAVE_CALC, JSON.stringify(s)); } catch(e){} }
+function registrarPasoCalc(campo, ok){
+  var s = leerCalcStats();
+  s[campo+"I"]++; if (ok) s[campo+"A"]++;
+  guardarCalcStats(s);
+  pintarCalcProgreso();
+}
+function pintarCalcProgreso(){
+  var s = leerCalcStats();
+  if (!s.sleI){ $("calcProgreso").textContent = ""; return; }
+  $("calcProgreso").textContent = "SLE acertado: " + s.sleA + "/" + s.sleI +
+    " · ALE acertado: " + s.aleA + "/" + s.aleI +
+    (s.decI ? " · Decisión: " + s.decA + "/" + s.decI : "");
+}
+
+function fmtMoney(n){
+  var r = Math.round(n*100)/100;
+  return "$" + r.toLocaleString("en-US", {maximumFractionDigits:2});
+}
+function parseNumero(s){
+  if (s==null) return NaN;
+  s = String(s).trim().replace(/[€$\s]/g,"").replace(/,/g,"");
+  return parseFloat(s);
+}
+function cerca(a,b){
+  return !isNaN(a) && Math.abs(a-b) <= Math.max(1, Math.abs(b)*0.015);
+}
+
+/* Improvisa un ejercicio: activo + incidente + AV/EF/ARO al azar, con las fórmulas ya resueltas
+   para poder corregir, pero SIN mostrárselas al usuario. */
+function generarEjercicioALE(){
+  var activos = [
+    "un servidor de bases de datos","la flota de portátiles corporativos","el sistema de facturación",
+    "el almacén de copias de seguridad","la planta de producción","el CRM de clientes",
+    "el servidor de correo","la infraestructura de comercio electrónico"
+  ];
+  var incidentes = [
+    "un ataque de ransomware","un fallo de disco sin copia reciente","una inundación en la sala de servidores",
+    "un robo físico del equipo","una fuga de datos por un empleado","un corte de suministro eléctrico prolongado",
+    "un ataque de denegación de servicio"
+  ];
+  var AVs = [5000,8000,10000,12000,15000,20000,25000,30000,40000,50000,60000,75000,100000,150000,200000];
+  var EFs = [0.10,0.20,0.25,0.30,0.40,0.50,0.60,0.75,0.80,0.90,1.00];
+
+  var av = AVs[Math.floor(Math.random()*AVs.length)];
+  var ef = EFs[Math.floor(Math.random()*EFs.length)];
+
+  var aroTxt, aro;
+  if (Math.random() < 0.5){
+    var vecesAno = [1,2,3,4,6,12][Math.floor(Math.random()*6)];
+    aro = vecesAno;
+    aroTxt = vecesAno===1 ? "una vez al año" : vecesAno+" veces al año";
+  } else {
+    var n = [2,3,4,5,10,20][Math.floor(Math.random()*6)];
+    aro = 1/n;
+    aroTxt = "una vez cada "+n+" años";
+  }
+
+  var activo = activos[Math.floor(Math.random()*activos.length)];
+  var incidente = incidentes[Math.floor(Math.random()*incidentes.length)];
+  var sle = av * ef;
+  var ale = sle * aro;
+
+  var frase = "El valor de " + activo + " es de " + fmtMoney(av) + ". Se estima que " + incidente +
+        " destruiría el " + Math.round(ef*100) + "% de ese valor, y se espera que ocurra " + aroTxt + ".";
+  frase = frase.replace("de el ", "del ");   // "de el CRM" -> "del CRM"
+
+  return { av:av, ef:ef, aro:aro, sle:sle, ale:ale, esc:frase };
+}
+
+function nuevoEjercicioCalculo(){
+  calcActual = generarEjercicioALE();
+  $("calcEscenario").textContent = calcActual.esc;
+  $("inSLE").value = ""; $("inALE").value = "";
+  $("inSLE").disabled = false; $("btnCompSLE").disabled = false;
+  $("inALE").disabled = false; $("btnCompALE").disabled = false;
+  $("fbSLE").className = "calc-fb"; $("fbSLE").innerHTML = "";
+  $("fbALE").className = "calc-fb"; $("fbALE").innerHTML = "";
+  $("fbDecision").className = "calc-fb"; $("fbDecision").innerHTML = "";
+  $("btnDecisionSi").disabled = false; $("btnDecisionNo").disabled = false;
+  $("pasoALE").className = "calc-paso oculto";
+  $("pasoDecision").className = "calc-paso oculto";
+  $("calcResumen").className = "calc-resumen oculto";
+}
+
+$("btnCompSLE").addEventListener("click", function(){
+  if ($("inSLE").disabled) return;
+  var v = parseNumero($("inSLE").value);
+  var ok = cerca(v, calcActual.sle);
+  var fb = $("fbSLE");
+  fb.className = "calc-fb " + (ok?"bien":"mal");
+  fb.innerHTML = (ok ? "✓ Correcto." : "✕ No exactamente.") +
+    '<span class="formula">SLE = AV × EF = ' + fmtMoney(calcActual.av) + ' × ' + calcActual.ef +
+    ' = ' + fmtMoney(calcActual.sle) + '</span>';
+  $("inSLE").disabled = true; $("btnCompSLE").disabled = true;
+  $("pasoALE").className = "calc-paso";
+  registrarPasoCalc("sle", ok);
+});
+
+$("btnCompALE").addEventListener("click", function(){
+  if ($("inALE").disabled) return;
+  var v = parseNumero($("inALE").value);
+  var ok = cerca(v, calcActual.ale);
+  var fb = $("fbALE");
+  fb.className = "calc-fb " + (ok?"bien":"mal");
+  fb.innerHTML = (ok ? "✓ Correcto." : "✕ No exactamente.") +
+    '<span class="formula">ALE = SLE × ARO = ' + fmtMoney(calcActual.sle) + ' × ' +
+    (Math.round(calcActual.aro*100)/100) + ' = ' + fmtMoney(calcActual.ale) + '</span>';
+  $("inALE").disabled = true; $("btnCompALE").disabled = true;
+  registrarPasoCalc("ale", ok);
+
+  // Coste de protección: a veces por debajo del ALE (compensa), a veces por encima (no compensa)
+  var factor = Math.random() < 0.5 ? (0.4 + Math.random()*0.4) : (1.3 + Math.random()*1.2);
+  var costo = Math.max(50, Math.round(calcActual.ale * factor / 50) * 50);
+  calcActual.costo = costo;
+  calcActual.compensa = costo < calcActual.ale;
+  $("decisionTexto").textContent = "Proteger este activo frente a ese riesgo cuesta " + fmtMoney(costo) +
+    " al año. Con un ALE de " + fmtMoney(calcActual.ale) + ", ¿compensa la inversión?";
+  $("pasoDecision").className = "calc-paso";
+});
+
+function responderDecision(siCompensa){
+  if ($("btnDecisionSi").disabled) return;
+  var ok = (siCompensa === calcActual.compensa);
+  var fb = $("fbDecision");
+  fb.className = "calc-fb " + (ok?"bien":"mal");
+  fb.innerHTML = (ok ? "✓ Correcto." : "✕ No.") +
+    " El coste de protección (" + fmtMoney(calcActual.costo) + ") es " + (calcActual.compensa?"menor":"mayor") +
+    " que el ALE (" + fmtMoney(calcActual.ale) + "), así que " +
+    (calcActual.compensa ? "sí compensa invertir." : "no compensa: sale más caro que asumir la pérdida esperada.");
+  $("btnDecisionSi").disabled = true; $("btnDecisionNo").disabled = true;
+  registrarPasoCalc("dec", ok);
+  mostrarResumenCalculo();
+}
+$("btnDecisionSi").addEventListener("click", function(){ responderDecision(true); });
+$("btnDecisionNo").addEventListener("click", function(){ responderDecision(false); });
+
+function mostrarResumenCalculo(){
+  var c = calcActual;
+  $("calcResumen").className = "calc-resumen";
+  $("calcResumen").innerHTML =
+    "<b>Resumen del ejercicio</b><br>" +
+    "AV = " + fmtMoney(c.av) + " · EF = " + Math.round(c.ef*100) + "% · ARO = " + (Math.round(c.aro*100)/100) + "<br>" +
+    "SLE = AV × EF = " + fmtMoney(c.sle) + "<br>" +
+    "ALE = SLE × ARO = " + fmtMoney(c.ale);
+}
+
+$("btnOtroCalc").addEventListener("click", nuevoEjercicioCalculo);
+$("btnSalirCalc").addEventListener("click", function(){
+  $("zonaCalculo").style.display = "none";
+  $("config").style.display = "block";
+});
 
 function esc(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -800,6 +1718,8 @@ function esc(s){
 /* ---------- Arranque ---------- */
 pintarFiltros();
 pintarMios();
+pintarStats();
+pintarCalcProgreso();
 </script>
 </body>
 </html>
